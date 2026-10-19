@@ -33,7 +33,7 @@ subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-i", os.path.join(d, "fin
 base = sys.argv[3] if len(sys.argv) > 3 else None
 sheet = f"{base.rstrip('/')}/sheet.jpg" if base else "data:image/jpeg;base64," + base64.b64encode(open(jpg, "rb").read()).decode()
 
-fig, title = man["fig"], man["title"]
+title = man["title"]
 lufs = float(loud.group(1)) if loud else None
 ok_loud = lufs is not None and abs(lufs + 16) <= 1
 rows = [
@@ -43,7 +43,7 @@ rows = [
     f"| Frames | {', '.join(f'{k} at {t:.0f} s' for k, t in picks)} |",
 ]
 said = "\n".join(f"- {l.get('text')}" for l in man["lines"])
-open(out, "w").write(f"""# FIG. {fig} · {title}
+open(out, "w").write(f"""# {title}
 
 <img alt="contact sheet" src="{sheet}" width="100%">
 
@@ -55,4 +55,4 @@ open(out, "w").write(f"""# FIG. {fig} · {title}
 
 {said}
 """)
-print(f"FIG. {fig} {title}: {tl['total']:.1f} s, {lufs} LUFS, long gaps: {len(long_gaps)}")
+print(f"{title}: {tl['total']:.1f} s, {lufs} LUFS, long gaps: {len(long_gaps)}")

@@ -40,3 +40,18 @@ def load_env(start="."):
             k, _, v = ln.strip().partition("=")
             if k and not k.startswith("#"):
                 os.environ.setdefault(k, v)
+
+
+DEFAULT_TAGS = {"open": "{TITLE}", "close": "{TITLE}", "header": "{TITLE}"}
+
+
+def piece_tag(kind, manifest, series):
+    """A piece's on-screen tag: the open card, the close card or the footage header. A series or manifest sets
+    `tags: {open, close, header}` as templates over the manifest's fields, with {title} and {TITLE} (upper case)."""
+    template = {**DEFAULT_TAGS, **(series.get("tags") or {}), **(manifest.get("tags") or {})}[kind]
+    title = str(manifest.get("title", ""))
+    keys = {k: v for k, v in manifest.items() if isinstance(v, (str, int, float))} | {"title": title, "TITLE": title.upper()}
+    try:
+        return template.format_map(keys)
+    except KeyError as e:
+        raise SystemExit(f"tags.{kind} uses {{{e.args[0]}}}, which the manifest doesn't set")

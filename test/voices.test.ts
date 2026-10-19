@@ -3,7 +3,7 @@ import { join } from "node:path";
 
 const TOOLS = join(import.meta.dir, "../tools");
 
-// voices.py imports only the standard library, so plain python3 runs it.
+// voices.py and filmlib.py import only the standard library at load, so plain python3 runs them.
 function py(code: string): unknown {
   const r = Bun.spawnSync([
     "python3",
@@ -14,6 +14,22 @@ function py(code: string): unknown {
   if (r.exitCode !== 0) throw new Error(r.stderr.toString());
   return JSON.parse(r.stdout.toString());
 }
+
+describe("piece tags", () => {
+  test("default to the title, follow series templates, and name a missing field", () => {
+    expect(
+      py(`from filmlib import piece_tag
+m = {"fig": "05", "title": "Write it", "act": "II"}
+s = {"tags": {"open": "FIG. {fig} · {TITLE}", "close": "SHEET {fig} · ACT {act}"}}
+print(json.dumps([piece_tag("open", m, {}), piece_tag("open", m, s), piece_tag("close", m, s), piece_tag("header", m, s)]))`),
+    ).toEqual(["WRITE IT", "FIG. 05 · WRITE IT", "SHEET 05 · ACT II", "WRITE IT"]);
+    expect(() =>
+      py(
+        `from filmlib import piece_tag; piece_tag("open", {"title": "x"}, {"tags": {"open": "EP. {fig}"}})`,
+      ),
+    ).toThrow("tags.open uses {fig}");
+  });
+});
 
 describe("voice engines", () => {
   test("a bare name is an Azure voice and keeps the take key older takes recorded", () => {

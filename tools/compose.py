@@ -16,7 +16,7 @@ Optional sound keys: `sfx` cues (a sfx.py voice or a file, placed so its peak la
 """
 import argparse, hashlib, json, os, re, subprocess, sys
 import yaml
-from filmlib import library_root, series_config
+from filmlib import library_root, piece_tag, series_config
 
 TOOLS = os.path.dirname(os.path.abspath(__file__))
 VP = (128, 100, 1664, 936)
@@ -60,7 +60,7 @@ def load_marks(spec):
     return d
 
 
-fig, title, X = str(M["fig"]), M["title"], float(M.get("crossfade", 0.5))
+title, X = M["title"], float(M.get("crossfade", 0.5))
 book = M.get("bookends") or {}
 segs = [{**s, "source": here(s["source"])} for s in M["scenes"] if s.get("cold")]
 
@@ -139,8 +139,10 @@ if lines and lines[-1]["start"] + lines[-1]["dur"] > total - 0.4:
 
 # Cards
 cards = []
-figtag = {"kind": "figtag", "file": "figtag.png", "text": f"FIG. {fig} · {title.upper()}", "scene": "open"}
-sheet = {"kind": "sheet", "file": "sheet.png", "text": f"SHEET {fig} · ACT {M.get('act', '0')}", "title": title, "scene": "close"}
+figtag = {"kind": "figtag", "file": "figtag.png", "text": piece_tag("open", M, S), "scene": "open"}
+close_tag = piece_tag("close", M, S)
+sheet = {"kind": "sheet", "file": "sheet.png", "text": close_tag, "title": "" if title.upper() in close_tag.upper() else title,
+         "scene": "close"}
 for c in M.get("cards", []):
     if c["kind"] == "figtag":
         figtag |= c
@@ -160,7 +162,7 @@ for s in segs:
     if s.get("frame") == "viewport":
         render.append({"kind": "viewport", "file": f"viewport-{s['id']}.png", "rect": VP,
                        "header": M.get("viewport_header", (f"<b>{THEME['brand']}</b> &nbsp;·&nbsp; " if THEME.get("brand") else "")
-                                       + f"FIG. {fig} &nbsp;·&nbsp; {title.upper()}"),
+                                       + piece_tag("header", M, S).replace(" · ", " &nbsp;·&nbsp; ")),
                        "label": s.get("label", "")})
 tone = M.get("caption_tone", "light")
 for k, ln in enumerate(lines):
