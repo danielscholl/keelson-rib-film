@@ -1,0 +1,7 @@
+{
+  "database": "dolt",
+  "backend": "dolt",
+  "dolt_mode": "embedded",
+  "dolt_database": "keelson_rib_film",
+  "project_id": "89042b92-d99a-4836-9ace-0c1c6edcd482"
+}
