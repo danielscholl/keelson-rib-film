@@ -2,6 +2,7 @@ import { isAbsolute, join, resolve } from "node:path";
 import type { ToolDefinition } from "@keelson/shared";
 import { z } from "@keelson/shared";
 import { configuredNames, probeServices, probeToolchain } from "./doctor.ts";
+import { initLibrary, STARTER_PIECE } from "./init.ts";
 import { libraryRootFor, scanLibrary } from "./library.ts";
 import { loadMethod, METHOD_DIR, type MethodPage } from "./method.ts";
 import { decideGate, reviewerMinutes } from "./series.ts";
@@ -171,6 +172,33 @@ export function filmDoctorTool(): ToolDefinition {
   };
 }
 
+export function filmInitTool(): ToolDefinition {
+  return {
+    name: "film_init",
+    description:
+      "Start a film library: writes a sample series with one short (a manifest and a motion board) that renders with no cloud services, using the machine's own voice when Azure Speech is not set up. Never overwrites a file that exists. Use when someone has no library yet or wants a working example to copy.",
+    inputSchema: z.object({
+      dir: z
+        .string()
+        .optional()
+        .describe("Folder for the library; defaults to the current project folder"),
+    }),
+    async execute(input, ctx) {
+      const { dir } = input as { dir?: string };
+      const result = initLibrary(dir ? resolve(ctx.cwd, dir) : ctx.cwd);
+      ctx.emit({
+        type: "tool_result",
+        toolUseId: "",
+        content: JSON.stringify({
+          ...result,
+          sample: STARTER_PIECE,
+          next: `run the film-cut workflow with arguments ${STARTER_PIECE}`,
+        }),
+      });
+    },
+  };
+}
+
 export function registerFilmTools(): readonly ToolDefinition[] {
-  return [filmGuideTool(), filmStatusTool(), filmDoctorTool()];
+  return [filmGuideTool(), filmStatusTool(), filmDoctorTool(), filmInitTool()];
 }

@@ -10,13 +10,16 @@ export function filmCommand(runtime: string = process.execPath, bin: string = FI
   return `${JSON.stringify(runtime)} ${JSON.stringify(bin)}`;
 }
 
-const REVIEWER_PROMPT = `You review one cut of a narrated short before a person sees it.
-Call film_guide with topic "review" for the checks, severities and rubric, then read the evidence:
-the review page and contact sheet named in the gate message (open the contact sheet image with your file
-viewing tool), and qa/autoscan.md beside it. Approve only when nothing is P0 or P1, loudness is within
-1 LU of target, every caption and on-screen word is legible, and the picture matches what the narration says.
-Otherwise answer changes, as a numbered list where each item names the line id (n1, n2...) or the
-scene or board id it concerns and the fix.`;
+const REVIEWER_PROMPT = `You review one cut of a narrated short before a person sees it. You cannot play the video and do
+not need to: the evidence was measured from it. Read the review page named in the gate message (length, loudness,
+silence, narration), open qa/sheet.jpg beside it with your file viewing tool (nine frames across the cut), and read
+qa/autoscan.md and the piece's build/timeline.json (each segment's start and length). An autoscan pop within half a
+second of a segment boundary is the cut itself, not a defect. film_guide topic "review" holds the full rubric when
+the method is installed; if it has no topics, judge by these rules alone.
+Approve when loudness is within 1 LU of target, no silence runs over 3 s, every caption and on-screen word on the sheet
+is legible, each frame fits the narration of its scene, and no autoscan candidate away from a boundary shows as a
+defect on the frames. Otherwise answer changes, as a numbered list where each item names the line id (n1, n2...) or
+the scene or board id it concerns and the fix. Escalate only when evidence is missing or unreadable.`;
 
 export function filmCutWorkflow(film: string = filmCommand()): RibWorkflowContribution {
   return {
@@ -64,7 +67,7 @@ export function filmCutWorkflow(film: string = filmCommand()): RibWorkflowContri
           depends_on: ["check"],
           approval: {
             message:
-              "Cut ready: $resolve.output.title ($resolve.output.series). Watch $resolve.output.piece/final.mp4. Review page: $check.output (contact sheet $resolve.output.piece/final.qa.png). Approve, or reply with notes for film-revise.",
+              "Cut ready: $resolve.output.title ($resolve.output.series). Watch $resolve.output.piece/final.mp4. Review page: $check.output (contact sheet $resolve.output.piece/qa/sheet.jpg). Approve, or reply with notes for film-revise.",
             capture_response: true,
             reviewer: {
               prompt: REVIEWER_PROMPT,

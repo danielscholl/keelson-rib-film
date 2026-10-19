@@ -1,0 +1,27 @@
+fig: "01"
+title: Hello, film
+crossfade: 0.5
+
+plate:
+  html: source/plate.html
+  out: raw/plate.mp4
+  boards:
+    - { id: idea, lines: [n1], lead: 0.6, tail: 1.2 }
+    - { id: stages, lines: [n2, n3], lead: 0.4, gap: 0.6, tail: 1.6 }
+
+scenes:
+  - id: b-idea
+    source: raw/plate.mp4
+    marks: source/plate-marks.json
+    frame: full
+    trim: [idea, idea.end]
+  - id: b-stages
+    source: raw/plate.mp4
+    marks: source/plate-marks.json
+    frame: full
+    trim: [stages, stages.end]
+
+lines:
+  - { id: n1, scene: b-idea, at: n1, text: "This is your first film. It started as a manifest, got a voice, and was drawn on a board." }
+  - { id: n2, scene: b-stages, at: n2, text: "Every piece moves through the same stages: script, voice, motion, cut, check, and publish." }
+  - { id: n3, scene: b-stages, at: n3, text: "Change a line, cut again, and the film follows." }
