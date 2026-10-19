@@ -1,0 +1,70 @@
+name: Bug report
+description: Something in the film rib isn't working as expected.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This repo is public. Leave out tokens, keys, subscription and tenant ids,
+        home paths and emails. For a security issue, do **not** file here; see
+        [SECURITY.md](https://github.com/danielscholl/keelson-rib-film/security/policy).
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where
+      options:
+        - Storyboard or sample
+        - Cut (voice, boards, compose)
+        - QA or review gate
+        - Revision
+        - Publish
+        - Board
+        - film_* tools or the Director
+        - Doctor / toolchain
+        - Not sure / other
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: The actual behavior, and the piece, step or tool involved.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Rib version or commit, `keelson version`, the provider and model, `ffmpeg -version` first line, and OS.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: Workflow run output or server log lines, redacted.
+      render: text
+    validations:
+      required: false
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before filing
+      options:
+        - label: I searched existing issues for a duplicate.
+          required: true
+        - label: I removed tokens, keys, ids, home paths and emails from this report.
+          required: true

@@ -1,0 +1,40 @@
+name: Feature request
+description: Propose a capability or change to the film rib.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Describe the step you keep doing by hand or the check that would have
+        caught a problem; we'll work out where it fits.
+
+        This repo is public. Leave out tokens, keys, ids and emails.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / motivation
+      description: What is hard to see or to do today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+    validations:
+      required: false
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Storyboard or sample
+        - Cut (voice, boards, compose)
+        - QA or review gate
+        - Revision
+        - Publish
+        - Board
+        - film_* tools or the Director
+        - Docs
+        - Not sure / other
+    validations:
+      required: true

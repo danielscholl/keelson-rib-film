@@ -1,0 +1,33 @@
+# @keelson/shared is a release tarball URL that Dependabot does not track:
+# bump it by hand alongside the harness release.
+
+version: 2
+updates:
+  - package-ecosystem: bun
+    directory: "/"
+    cooldown:
+      default-days: 7
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+    groups:
+      types:
+        patterns:
+          - "@types/*"
+      dev-minor-and-patch:
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 3
+    labels:
+      - dependencies
+      - github-actions
