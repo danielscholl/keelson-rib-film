@@ -1,0 +1,9 @@
+[project]
+name = "film-tools"
+version = "0.0.0"
+description = "The film rib's production line."
+requires-python = ">=3.11"
+dependencies = ["numpy>=2.0,<3", "pyyaml>=6.0,<7"]
+
+[tool.uv]
+package = false

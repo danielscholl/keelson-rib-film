@@ -53,6 +53,7 @@ beforeAll(() => {
       inputs: {
         "short.yaml": sha256(join(root, "tour/ep-04-stale/short.yaml")),
         "source/plate.html": "old",
+        [join(root, "media/tour/ep-04/ep-04.mp4")]: "size:0",
       },
     }),
     60,

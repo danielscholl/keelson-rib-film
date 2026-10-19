@@ -15,3 +15,8 @@ dist/
 .claude/
 .codex/
 .cursor/
+
+# uv environment for the production line
+tools/.venv/
+__pycache__/
+tools/uv.lock

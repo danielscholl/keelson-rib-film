@@ -16,13 +16,32 @@ describe("rib identity", () => {
 
 describe("toolchain probe", () => {
   test("reports each missing binary with an install hint", () => {
-    const probes = probeToolchain((bin) => (bin === "uv" ? null : `/usr/bin/${bin}`));
+    const probes = probeToolchain(
+      (bin) => (bin === "uv" ? null : `/usr/bin/${bin}`),
+      () => true,
+      "darwin",
+    );
     const missing = probes.filter((p) => !p.found);
     expect(missing.map((p) => p.name)).toEqual(["uv"]);
     expect(missing[0]?.hint).toContain("uv");
   });
 
   test("all present reads as ready", () => {
-    expect(probeToolchain((bin) => `/usr/bin/${bin}`).every((p) => p.found)).toBe(true);
+    expect(
+      probeToolchain(
+        (bin) => `/usr/bin/${bin}`,
+        () => true,
+        "darwin",
+      ).every((p) => p.found),
+    ).toBe(true);
+  });
+
+  test("a missing Chrome is reported", () => {
+    const probes = probeToolchain(
+      (bin) => `/usr/bin/${bin}`,
+      () => false,
+      "darwin",
+    );
+    expect(probes.filter((p) => !p.found).map((p) => p.name)).toEqual(["Google Chrome"]);
   });
 });

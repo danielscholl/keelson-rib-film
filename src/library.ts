@@ -1,5 +1,5 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
-import { basename, dirname, join, relative, sep } from "node:path";
+import { basename, dirname, join, relative, resolve, sep } from "node:path";
 import { parseSeries, type SeriesConfig } from "./series.ts";
 
 export type Stage = "scripted" | "voiced" | "cut" | "checked" | "published";
@@ -49,7 +49,17 @@ export function isStale(dir: string): boolean | null {
     return null;
   }
   if (!record?.inputs || typeof record.inputs !== "object") return null;
-  return Object.entries(record.inputs).some(([rel, hash]) => sha256(join(dir, rel)) !== hash);
+  return Object.entries(record.inputs).some(([path, recorded]) => {
+    const abs = resolve(dir, path);
+    if (recorded.startsWith("size:")) {
+      try {
+        return `size:${statSync(abs).size}` !== recorded;
+      } catch {
+        return true;
+      }
+    }
+    return sha256(abs) !== recorded;
+  });
 }
 
 export interface Series {
@@ -132,10 +142,27 @@ export function fillTemplate(template: string, manifest: Record<string, unknown>
   return missing ? null : out;
 }
 
+// Same rule as tools/publish.py. A series with no publish block has no target, so nothing reads as published.
+export function publishTarget(
+  manifest: Record<string, unknown>,
+  series: { config: SeriesConfig; dir?: string },
+): { dir: string | null; file: string | null } | null {
+  const target = series.config.publish;
+  if (!target) return null;
+  const seriesName =
+    typeof manifest.series === "string" ? manifest.series : series.dir ? basename(series.dir) : "";
+  const keys = { ...manifest, series: seriesName };
+  const dir = fillTemplate(target.dir, keys);
+  return {
+    dir,
+    file: target.file ? fillTemplate(target.file, keys) : dir && `${basename(dir)}.mp4`,
+  };
+}
+
 export function readPiece(
   manifestPath: string,
   root: string,
-  series: { id: string; config: SeriesConfig },
+  series: { id: string; config: SeriesConfig; dir?: string },
 ): Piece {
   const dir = dirname(manifestPath);
   const id = relative(root, dir).split(sep).join("/");
@@ -186,12 +213,9 @@ export function readPiece(
   }
 
   let published: number | null = null;
-  const target = series.config.publish;
+  const target = publishTarget(manifest, series);
   if (target && cut !== null) {
-    const pubDir = fillTemplate(target.dir, { ...manifest, series: series.id });
-    const pubFile = target.file
-      ? fillTemplate(target.file, manifest)
-      : `${basename(pubDir ?? "")}.mp4`;
+    const { dir: pubDir, file: pubFile } = target;
     if (pubDir && pubFile) {
       published = mtime(join(root, pubDir, pubFile));
       if (published !== null) {
