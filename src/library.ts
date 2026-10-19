@@ -79,6 +79,21 @@ export interface Library {
 const SKIP_DIRS = new Set(["node_modules", ".git", "raw", "narr", "build", "cards", "media"]);
 const MAX_DEPTH = 6;
 
+// Same rule as tools/filmlib.py: FILM_LIBRARY, else the nearest folder with assets/ or .git.
+export function libraryRootFor(
+  start: string,
+  env: string | undefined = process.env.FILM_LIBRARY,
+): string {
+  if (env) return resolve(env);
+  let dir = resolve(start);
+  for (;;) {
+    if (isDir(join(dir, "assets")) || existsSync(join(dir, ".git"))) return dir;
+    const parent = dirname(dir);
+    if (parent === dir) return resolve(start);
+    dir = parent;
+  }
+}
+
 export function findManifests(root: string, ignore: readonly string[] = []): string[] {
   const found: string[] = [];
   const walk = (dir: string, depth: number) => {

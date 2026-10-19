@@ -1,13 +1,24 @@
 #!/usr/bin/env bun
 // film <tool> [args...]: run one of the rib's production-line tools against a short.
 // The current folder is the library unless FILM_LIBRARY says otherwise. `film` alone lists the tools.
+import { pieceInfo } from "../src/info.ts";
 import { commandFor, listTools } from "../src/runner.ts";
 
 const [name, ...args] = process.argv.slice(2);
 const tools = listTools();
 
+if (name === "info") {
+  try {
+    console.log(JSON.stringify(pieceInfo(args[0] ?? ".")));
+    process.exit(0);
+  } catch (e) {
+    console.error(`film info: ${(e as Error).message}`);
+    process.exit(1);
+  }
+}
+
 if (!name || name === "help" || name === "--help") {
-  console.log("usage: film <tool> [args...]\n");
+  console.log("usage: film <tool> [args...]   |   film info <short-dir>\n");
   for (const t of tools) console.log(`  ${t.name.padEnd(14)} ${t.summary}`);
   process.exit(name ? 0 : 2);
 }
