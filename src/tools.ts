@@ -1,7 +1,8 @@
-import { isAbsolute, resolve } from "node:path";
+import { isAbsolute, join, resolve } from "node:path";
 import type { ToolDefinition } from "@keelson/shared";
 import { z } from "@keelson/shared";
-import { scanLibrary } from "./library.ts";
+import { configuredNames, probeServices, probeToolchain } from "./doctor.ts";
+import { libraryRootFor, scanLibrary } from "./library.ts";
 import { loadMethod, METHOD_DIR, type MethodPage } from "./method.ts";
 import { decideGate, reviewerMinutes } from "./series.ts";
 
@@ -126,6 +127,50 @@ export function filmStatusTool(): ToolDefinition {
   };
 }
 
+export function doctorReport(cwd: string, library?: string) {
+  const root = libraryRootFor(library ? resolve(cwd, library) : cwd);
+  const envFile = process.env.FILM_ENV_FILE ?? join(root, ".env.local");
+  const toolchain = probeToolchain();
+  const services = probeServices(configuredNames(process.env, envFile), Bun.which("az") !== null);
+  return {
+    library: root,
+    toolchain: toolchain.map((t) => ({
+      name: t.name,
+      found: t.found,
+      ...(t.found ? {} : { fix: t.hint }),
+    })),
+    services: services.map((s) => ({
+      service: s.service,
+      tools: s.tools,
+      on: s.on,
+      ...(s.on ? {} : { how: s.how }),
+    })),
+    note: "Services are optional: storyboard, motion, compose and QA need none. Narration needs Azure Speech, or recorded WAVs in narr/.",
+  };
+}
+
+export function filmDoctorTool(): ToolDefinition {
+  return {
+    name: "film_doctor",
+    description:
+      "What this machine can make: the toolchain the production line needs (ffmpeg, uv, node, Chrome) and which optional media services are configured (Azure Speech for narration, Sora, Gemini for Veo, Lyria and images), with how to turn each on. Reads only whether settings exist, never their values. Use before planning a piece that needs generated footage, music or narration.",
+    inputSchema: z.object({
+      library: z
+        .string()
+        .optional()
+        .describe("Library folder; defaults to the current project folder"),
+    }),
+    async execute(input, ctx) {
+      const { library } = input as { library?: string };
+      ctx.emit({
+        type: "tool_result",
+        toolUseId: "",
+        content: JSON.stringify(doctorReport(ctx.cwd, library)),
+      });
+    },
+  };
+}
+
 export function registerFilmTools(): readonly ToolDefinition[] {
-  return [filmGuideTool(), filmStatusTool()];
+  return [filmGuideTool(), filmStatusTool(), filmDoctorTool()];
 }

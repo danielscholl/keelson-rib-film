@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { libraryRootFor, scanLibrary } from "./library.ts";
+import { libraryRootFor, publishTarget, scanLibrary } from "./library.ts";
 import { decideGate, type GateAnswer, reviewerMinutes } from "./series.ts";
 
 export interface PieceInfo {
@@ -26,9 +26,11 @@ export function pieceInfo(target: string, cwd: string = process.cwd()): PieceInf
   const series = lib.series.find((s) => s.pieces.some((p) => p.dir === dir));
   const piece = series?.pieces.find((p) => p.dir === dir);
   if (!series || !piece) throw new Error(`${dir} is not inside the library at ${library}`);
-  const manifest = (Bun.YAML.parse(readFileSync(join(dir, "short.yaml"), "utf8")) ?? {}) as {
-    plate?: unknown;
-  };
+  const manifest = (Bun.YAML.parse(readFileSync(join(dir, "short.yaml"), "utf8")) ?? {}) as Record<
+    string,
+    unknown
+  >;
+  const pub = publishTarget(manifest, series);
   const approvedCuts = series.pieces.filter((p) => p.stage === "published").length;
   return {
     piece: dir,
@@ -37,7 +39,7 @@ export function pieceInfo(target: string, cwd: string = process.cwd()): PieceInf
     title: piece.title,
     stage: piece.stage,
     stale: piece.stale,
-    publishTo: series.config.publish?.dir ?? null,
+    publishTo: pub?.dir && pub.file ? join(library, pub.dir, pub.file) : null,
     plate: manifest.plate !== undefined && manifest.plate !== null,
     gate: decideGate(series.config, "cut", approvedCuts),
     reviewerMinutes: reviewerMinutes(series.config),

@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { mkdirSync, mkdtempSync, rmSync, utimesSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
+import { pieceInfo } from "../src/info.ts";
 import { fillTemplate, scanLibrary, sha256 } from "../src/library.ts";
 import { libraryStatus } from "../src/tools.ts";
 
@@ -20,6 +21,7 @@ const manifest = (fig: string, title: string) =>
 
 beforeAll(() => {
   root = mkdtempSync(join(tmpdir(), "film-lib-"));
+  mkdirSync(join(root, "assets"));
   put(
     "tour/series.yaml",
     "title: Tour\nprefix: ep\npublish: { dir: 'media/{series}/{prefix}-{fig}' }\ngates: { cut: { human_first: 2 } }\n",
@@ -144,5 +146,18 @@ describe("templates", () => {
   test("a missing key yields no path", () => {
     expect(fillTemplate("media/{series}/{prefix}-{fig}", { series: "s", fig: "01" })).toBeNull();
     expect(fillTemplate("media/{series}/{fig}", { series: "s", fig: "01" })).toBe("media/s/01");
+  });
+});
+
+describe("piece info", () => {
+  test("publishTo is the filled path, and a series without a publish block has none", () => {
+    expect(pieceInfo("tour/ep-05-ready", root).publishTo).toBe(
+      join(root, "media/tour/ep-05/ep-05.mp4"),
+    );
+    expect(pieceInfo("extras/teaser", root).publishTo).toBeNull();
+  });
+
+  test("the cut gate counts published pieces toward human_first", () => {
+    expect(pieceInfo("tour/ep-05-ready", root).gate).toBe("human");
   });
 });
