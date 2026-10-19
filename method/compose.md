@@ -8,7 +8,7 @@
 - `cold: true` on a scene puts it before the open bookend.
 - `lines:` each `{ id, scene, at, text, ssml, voice, style, caption }`. `at` is a time in that scene.
 - `bookends: { open, close }` name `assets/bookends/open-<name>.mp4` and `close-<name>.mp4` in the library; the series sets them.
-- `cards:` callouts `{ kind: callout, scene, at, until, text, anchor: [x, y], label: [x, y] }`, or a library card kind; `figtag` and `sheet` entries restyle the cards over the open and close bookends.
+- `cards:` callouts `{ kind: callout, scene, at, until, text, anchor: [x, y], label: [x, y] }`, or a library card kind; `figtag` and `sheet` entries restyle the cards over the open and close bookends, whose text comes from the series `tags`.
 - `crossfade` (default 0.5 s), `captions` (default on), `caption_tone: light | dark`, `canvas: [w, h]` for vertical or square, `theme` to override the series look.
 
 Segments run cold-open scenes, the open bookend, scenes in order, the close bookend, each crossfading into the next. The composer refuses to render if two lines overlap or the last line runs into the fade-out; fix the pacing, don't force it.

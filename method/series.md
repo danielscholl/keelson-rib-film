@@ -18,6 +18,10 @@ theme:
   background: assets/paper.jpg   # or plain, grid, any CSS background
   brand: FIELD GUIDE
 bookends: { open: sting, close: endcard }   # assets/bookends/open-sting.mp4, close-endcard.mp4
+tags:                            # on-screen tags; templates over manifest fields, {TITLE} is upper case
+  open: "EP. {fig} · {TITLE}"    # the card over the open bookend (default: the title)
+  close: "{TITLE}"               # the card over the close bookend
+  header: "EP. {fig} · {TITLE}"  # the header above framed footage
 gates:
   storyboard: human
   cut: { human_first: 3 }        # then the reviewer answers the cut gate first
