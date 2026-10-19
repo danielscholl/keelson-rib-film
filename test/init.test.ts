@@ -2,9 +2,11 @@ import { afterAll, describe, expect, test } from "bun:test";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import type { MessageChunk, ToolContext } from "@keelson/shared";
 import { pieceInfo } from "../src/info.ts";
-import { initLibrary, STARTER_PIECE } from "../src/init.ts";
+import { initLibrary, isLibrarySite, STARTER_PIECE } from "../src/init.ts";
 import { scanLibrary } from "../src/library.ts";
+import { filmInitTool } from "../src/tools.ts";
 
 const dirs: string[] = [];
 const fresh = () => {
@@ -15,6 +17,18 @@ const fresh = () => {
 afterAll(() => {
   for (const d of dirs) rmSync(d, { recursive: true, force: true });
 });
+
+async function init(cwd: string, input: unknown = {}) {
+  const chunks: MessageChunk[] = [];
+  const ctx = {
+    cwd,
+    abortSignal: new AbortController().signal,
+    emit: (c: MessageChunk) => chunks.push(c),
+  };
+  await filmInitTool().execute(input, ctx as unknown as ToolContext);
+  const r = chunks.find((c) => c.type === "tool_result") as { content: string; isError?: boolean };
+  return { ...r, body: JSON.parse(r.content) };
+}
 
 describe("film init", () => {
   test("writes a library whose sample piece is scripted, publishable and human-gated", () => {
@@ -43,5 +57,35 @@ describe("film init", () => {
       readFileSync(join(import.meta.dir, "../starter", STARTER_PIECE, "short.yaml"), "utf8"),
     ) as { plate: { boards: { lines: string[] }[] }; lines: { id: string }[] };
     expect(m.plate.boards.flatMap((b) => b.lines).sort()).toEqual(m.lines.map((l) => l.id).sort());
+  });
+
+  test("a bare init refuses a busy folder that is not a repo or library, and writes nothing", async () => {
+    const busy = fresh();
+    writeFileSync(join(busy, "notes.txt"), "x");
+    expect(isLibrarySite(busy)).toBe(false);
+    const r = await init(busy);
+    expect(r.isError).toBe(true);
+    expect(r.body.error).toContain("pass dir");
+    expect(existsSync(join(busy, STARTER_PIECE))).toBe(false);
+  });
+
+  test("a bare init works in an empty folder or a repo, and names the sample by absolute path", async () => {
+    const empty = fresh();
+    const repo = fresh();
+    mkdirSync(join(repo, ".git"));
+    writeFileSync(join(repo, "README.md"), "x");
+    for (const cwd of [empty, repo]) {
+      const r = await init(cwd);
+      expect(r.isError).toBeUndefined();
+      expect(r.body.sample).toBe(join(cwd, STARTER_PIECE));
+      expect(r.body.next).toContain(join(cwd, STARTER_PIECE));
+    }
+  });
+
+  test("an explicit dir is always honoured", async () => {
+    const busy = fresh();
+    writeFileSync(join(busy, "notes.txt"), "x");
+    const r = await init(busy, { dir: "films" });
+    expect(r.body.library).toBe(join(busy, "films"));
   });
 });
