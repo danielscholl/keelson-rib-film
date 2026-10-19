@@ -1,0 +1,110 @@
+---
+title: A series of your own
+description: "Start a series with its own look, voice and music, have an agent plan and write a piece through the method, and hand the cut gate to the reviewer."
+sidebar:
+  order: 3
+---
+
+**The problem.** The sample looks like the sample. You want a run of short
+videos on your own subject that look and sound like they belong together,
+without restyling each one.
+
+**What you will do.** Start a series with a look, a voice and a bed, have the
+agent plan a piece through the method, cut it, and set the gates so the reviewer
+answers future cuts.
+
+**You need.** The library from [your first film](../your-first-film/). A voice
+service is optional; the system voice works throughout.
+
+## 1. Start the series
+
+Make a folder beside `first-steps` and give it a `series.yaml`:
+
+```yaml
+title: Field notes
+prefix: ep
+theme:
+  look: dark
+  colors: { accent: "#4fb39a" }
+  brand: FIELD NOTES
+gates:
+  storyboard: human
+  cut: { human_first: 2 }
+publish:
+  dir: published/{series}/ep-{fig}
+```
+
+`human_first: 2` means a person answers the cut gate until two pieces in this
+series are published, and the reviewer after that.
+
+If a voice service is configured, add a voice:
+
+```yaml
+voice: elevenlabs:21m00Tcm4TlvDq8ikWAM
+```
+
+[Pick a voice](../../guides/voices/) has the other forms.
+
+## 2. Make its bed
+
+A series sounds like itself when its bed does. From the library root, with
+`film` standing for the command `film_doctor` prints:
+
+```bash
+film loop assets/beds/field-notes.wav --len 45 --bpm 88 --chords Am7,Fmaj7,Cmaj7,G7 --no-arp
+```
+
+Listen to it. Change the chords or tempo and run it again until it fits;
+`field-notes.prompt.txt` keeps the recipe.
+
+## 3. Plan a piece with the agent
+
+In chat, give the agent a subject and an audience:
+
+```text
+> plan a 30-second field-notes episode explaining why a manifest beats a
+> timeline editor, for engineers who've never made a video
+```
+
+An agent with the Film rib reads `film_guide` before it plans. Expect it to
+work through the [method](../../guides/method/): a brief, two or three angles
+for you to pick from, then a storyboard with every line, what each board shows
+and on which word, and the sound. The storyboard gate is `human`, so it waits
+for you to approve before voicing anything.
+
+Once you approve, it writes `field-notes/ep-01-manifest/short.yaml`, a board
+page against the `--film-*` variables, and a `beds` entry pointing at
+`assets/beds/field-notes.wav`.
+
+## 4. Cut it and read the evidence
+
+```text
+> cut field-notes/ep-01-manifest
+```
+
+The cut comes out in the dark look with your accent: captions, cards and the
+board all draw from the series theme, and the bed sits under the narration. If
+something is wrong, say so at the gate, or edit the manifest, and cut again. `film_status` shows who
+answers this series' next cut gate: `human` for now.
+
+## 5. Publish, and let the reviewer in
+
+Approve the cut, then publish it:
+
+```text
+> publish field-notes/ep-01-manifest
+```
+
+`film-publish` stops for you (the publish gate is always a person), then writes
+the web mp4, poster, thumbnail and captions under `published/field-notes/ep-01/`.
+
+After the second piece is published, `film_status` reports the series' cut gate
+as `reviewer`. From then on the reviewer reads each cut's evidence first. A
+cut it approves goes through; anything else comes to you with its numbered
+changes attached.
+
+## What you learned
+
+The series carries the identity, so a piece only has to carry its idea. The
+gates start with you and move to the reviewer once the series has shown it cuts
+well, and publishing always comes back to you.

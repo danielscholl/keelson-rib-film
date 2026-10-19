@@ -1,0 +1,120 @@
+---
+title: Your first film
+description: "Start a film library, cut the sample short with film-cut, approve the cut gate, then change a line and watch the film follow."
+sidebar:
+  order: 2
+---
+
+**The problem.** You want to see what the production line makes before you plan
+anything, and you don't want to set up a voice service to find out.
+
+**What you will do.** Start a library, cut its sample short, approve the gate,
+change one line, and cut again.
+
+**You need.** Keelson running with the Film rib
+[installed](../../guides/install/) and `film_doctor` showing the toolchain
+found. No keys.
+
+## 1. Start a library
+
+Make an empty folder and open Keelson chat there:
+
+```bash
+mkdir my-films && cd my-films
+keelson chat
+```
+
+```text
+> start a film library here
+```
+
+The agent calls `film_init`, which writes a sample series and one short:
+
+```text
+  + .gitignore
+  + assets/.gitkeep
+  + first-steps/fig-01-hello/audio/bed.m4a
+  + first-steps/fig-01-hello/audio/bed.prompt.txt
+  + first-steps/fig-01-hello/short.yaml
+  + first-steps/fig-01-hello/source/plate.html
+  + first-steps/series.yaml
+```
+
+`film_init` never overwrites a file, so running it in a folder that already has
+some of these keeps yours. The [film command](../../reference/tools-and-commands/)
+does the same from a terminal: `film init`.
+
+## 2. Read the manifest
+
+Open `first-steps/fig-01-hello/short.yaml`. It is the whole film:
+
+- a **plate** of two boards, `idea` and `stages`, drawn by `source/plate.html`;
+- two **scenes** that cut the plate at its board marks;
+- a **bed** under everything, ducked under every line;
+- ten **effects**, each landing on a moment the board names;
+- three **lines** of narration.
+
+## 3. Cut it
+
+```bash
+keelson workflow run film-cut --arguments first-steps/fig-01-hello --no-worktree --watch
+```
+
+Or ask chat to cut `first-steps/fig-01-hello`. The run voices the three lines
+with the machine's voice, renders the boards timed to that narration, composes
+the master with captions, and measures it. It takes a minute or two, most of it
+in the board render.
+
+Then it stops:
+
+```text
+Cut ready: Hello, film (first-steps). Watch .../fig-01-hello/final.mp4.
+Review page: .../fig-01-hello/qa/review.md (contact sheet .../qa/sheet.jpg).
+Approve, or reply with notes for film-revise.
+```
+
+## 4. Watch, then answer the gate
+
+Open `final.mp4`. Then open `qa/review.md` and `qa/sheet.jpg`: the length,
+loudness against the target, any silence gaps, nine frames across the cut, and
+the narration as captioned. That page is what the reviewer agent reads when a
+series lets it answer this gate; for now a person answers it.
+
+```bash
+keelson workflow respond <run-id> gate approve
+```
+
+The run id is in the watch output, and the Workflows tab has the same gate with
+an Approve button.
+
+## 5. Change a line and cut again
+
+In `short.yaml`, change the third line:
+
+```yaml
+  - { id: n3, scene: b-stages, at: n3, text: "Change a line, cut again, and the whole film follows along." }
+```
+
+Keep the words "Change a line" and "cut again". The board page finds them in
+the narration to time its last reveal and the chime, and the plate step stops
+with the missing phrase if a line no longer says it.
+
+Ask chat for the piece's status first:
+
+```text
+> film status
+```
+
+`film_status` flags it `stale-cut`: the manifest changed since the cut was
+recorded. Run `film-cut` again. Only `n3` is re-voiced; the boards re-time to
+its new length, the chime that keys off "cut again" moves with it, and the
+captions follow.
+
+## What you learned
+
+The manifest is the film. You never told the line where the chime goes in
+seconds; you told it which spoken words matter, and it worked the rest out
+twice.
+
+Next, [a series of your own](../a-series-of-your-own/) gives the film a look,
+a voice and music of its own.

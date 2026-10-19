@@ -1,0 +1,37 @@
+---
+title: Reference
+description: "The contract tier for the Film rib: its tools and the film command, the two workflows, configuration, and what lands on disk."
+sidebar:
+  label: Overview
+  order: 1
+---
+
+import { CardGrid, LinkCard } from "@astrojs/starlight/components";
+
+Terse and exact. The manifest and `series.yaml` keys are documented where they
+are used, in the method's [compose](../guides/method/compose/) and
+[series](../guides/method/series/) pages. The rib publishes no surface and no
+snapshot keys.
+
+<CardGrid>
+  <LinkCard
+    title="Tools and commands"
+    href="tools-and-commands/"
+    description="The four film_* tools and every film command."
+  />
+  <LinkCard
+    title="Workflows"
+    href="workflows/"
+    description="film-cut and film-publish: nodes, gates and arguments."
+  />
+  <LinkCard
+    title="Configuration"
+    href="configuration/"
+    description="Media service settings and the rib's environment variables."
+  />
+  <LinkCard
+    title="Data on disk"
+    href="data-on-disk/"
+    description="Every file a piece holds, and what writes it."
+  />
+</CardGrid>

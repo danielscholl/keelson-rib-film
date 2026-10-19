@@ -1,0 +1,55 @@
+---
+title: Keelson Rib · Film
+description: "Narrated short films for Keelson: a storyboard you approve, a cut the production line renders, a gate before anyone sees it, and a gated publish."
+---
+
+import { CardGrid, LinkCard } from "@astrojs/starlight/components";
+
+A narrated short takes a dozen tools to make well: a voice, word timing,
+motion graphics that land on a spoken word, captions, a mix that sits under the
+voice, and a check that nothing flashes or stalls. Done by hand each time, the
+steps drift, and the second video looks nothing like the first.
+
+Film adds **narrated short films** to Keelson. You agree a storyboard, the
+**production line** renders the cut from a manifest, a **cut gate** stops it
+before anyone sees it, and a gated step stages it for the web. Agents on any
+provider, Copilot included, drive it through the rib's tools and workflows, and
+read **the method** (how a good short is planned, drawn, voiced, mixed and
+reviewed) through the `film_guide` tool.
+
+Nothing needs a cloud account to start. `film_init` writes a sample series with
+one short that renders with the machine's own voice and a procedural music bed.
+Configure a voice service when the draft is right, and cut again.
+
+Film is a [Keelson](https://keelsonrib.ai/docs/) rib: it installs into the
+harness you already run and uses what the harness owns (workflows, approval
+gates, provider routing and the MCP tool registry). Everything here is what Film
+adds.
+
+<CardGrid>
+  <LinkCard
+    title="Concepts"
+    href="concepts/"
+    description="Libraries, series and pieces; the production line; the gates; looks and voices."
+  />
+  <LinkCard
+    title="Guides"
+    href="guides/"
+    description="Install the rib, pick a voice and a look, add music and effects, publish. The full method lives here too."
+  />
+  <LinkCard
+    title="Tutorials"
+    href="tutorials/"
+    description="Cut your first film in a few minutes, then make a series of your own."
+  />
+  <LinkCard
+    title="Reference"
+    href="reference/"
+    description="Tools and commands, the workflows, configuration, and what lands on disk."
+  />
+  <LinkCard
+    title="Design"
+    href="design/"
+    description="Why the rib is built this way, and what is deferred."
+  />
+</CardGrid>
