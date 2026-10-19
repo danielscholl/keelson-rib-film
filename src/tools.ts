@@ -6,6 +6,7 @@ import { initLibrary, STARTER_PIECE } from "./init.ts";
 import { libraryRootFor, scanLibrary } from "./library.ts";
 import { loadMethod, METHOD_DIR, type MethodPage } from "./method.ts";
 import { decideGate, reviewerMinutes } from "./series.ts";
+import { filmCommand } from "./workflows.ts";
 
 function guideText(
   pages: readonly MethodPage[],
@@ -135,6 +136,7 @@ export function doctorReport(cwd: string, library?: string) {
   const services = probeServices(configuredNames(process.env, envFile), Bun.which("az") !== null);
   return {
     library: root,
+    command: filmCommand(),
     toolchain: toolchain.map((t) => ({
       name: t.name,
       found: t.found,
@@ -154,7 +156,7 @@ export function filmDoctorTool(): ToolDefinition {
   return {
     name: "film_doctor",
     description:
-      "What this machine can make: the toolchain the production line needs (ffmpeg, uv, node, Chrome) and which optional media services are configured (voice engines: Azure Speech, Azure OpenAI or Foundry, OpenAI, ElevenLabs; Sora; Gemini for Veo, Lyria and images), with how to turn each on. Reads only whether settings exist, never their values. Use before planning a piece that needs generated footage, music or narration.",
+      "What this machine can make: the toolchain the production line needs (ffmpeg, uv, node, Chrome) and which optional media services are configured (voice engines: Azure Speech, Azure OpenAI or Foundry, OpenAI, ElevenLabs; Sora; Gemini for Veo, Lyria and images), with how to turn each on, and the exact `film` command that runs the production line's tools here. Reads only whether settings exist, never their values. Use before planning a piece that needs generated footage, music or narration.",
     inputSchema: z.object({
       library: z
         .string()
