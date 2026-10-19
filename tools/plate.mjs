@@ -16,6 +16,7 @@ import { chromium } from "playwright";
 import { readFileSync, writeFileSync, mkdirSync, mkdtempSync, rmSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { execFileSync } from "node:child_process";
+import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import YAML from "yaml";
 
@@ -56,6 +57,8 @@ if (!verify) writeFileSync(join(dir, "source/plate-marks.json"), JSON.stringify(
 const b = await chromium.launch({ channel: "chrome", args: ["--allow-file-access-from-files"] });
 const [VW, VH] = M.plate.size ?? [1920, 1080];
 const p = await b.newPage({ viewport: { width: VW, height: VH } });
+// GSAP comes from the rib, so a board page needs no script tag of its own; a page that loads one still works.
+await p.addInitScript({ path: createRequire(import.meta.url).resolve("gsap/dist/gsap.min.js") });
 p.on("pageerror", (e) => { console.error("PAGE ERROR", e.message); process.exit(1); });
 p.on("console", (m) => m.type() === "error" && console.error("console:", m.text()));
 await p.goto(`file://${join(dir, M.plate.html)}`);
