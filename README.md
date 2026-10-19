@@ -42,6 +42,22 @@ No cloud account is needed. Without Azure Speech the lines are read by the
 machine's own voice (`say` on macOS, `espeak-ng` on Linux), good enough to
 check timing. Configure Azure Speech and cut again to re-voice them.
 
+## Look
+
+A series sets its look in `series.yaml`, and a piece can override it in its
+manifest. Nothing is built in: the default is a plain neutral surface.
+
+```yaml
+theme:
+  look: plain            # plain, blueprint or dark
+  background: assets/bg.jpg   # or grid, plain, or any CSS background
+  colors: { primary: "#1e3a5f", accent: "#b5803a" }
+```
+
+Captions, title cards and the frame around footage draw with it, and plate
+boards read it as `--film-*` CSS variables, so a board page written against
+those variables follows the series.
+
 ## Media services
 
 All optional. Put the settings in the environment or in `.env.local` at the

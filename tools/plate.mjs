@@ -11,7 +11,8 @@
 // lead + its lines (with gap between) + tail, so narration sets the pacing. The page gets
 // window.setup(T, words) and must build a paused GSAP timeline on window.tl; T[board] = { s, e, lines: { id: { n, d } } }
 // in plate seconds, words[id] = [[word, start, end], ...] relative to the line. Writes source/plate-marks.json
-// ({ board: s, "board.end": e, lineId: n }) for compose, and the encoded video.
+// ({ board: s, "board.end": e, lineId: n }) for compose, and the encoded video. The series theme reaches the page as
+// --film-* CSS variables (--film-background, --film-primary, --film-accent, --film-text...) and window.filmTheme.
 import { chromium } from "playwright";
 import { readFileSync, writeFileSync, mkdirSync, mkdtempSync, rmSync } from "node:fs";
 import { join, resolve } from "node:path";
@@ -19,6 +20,7 @@ import { execFileSync } from "node:child_process";
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import YAML from "yaml";
+import { pieceTheme, resolveTheme, themeVars } from "./theme.mjs";
 
 const argv = process.argv.slice(2);
 const dir = resolve(argv[0]);
@@ -59,6 +61,17 @@ const [VW, VH] = M.plate.size ?? [1920, 1080];
 const p = await b.newPage({ viewport: { width: VW, height: VH } });
 // GSAP comes from the rib, so a board page needs no script tag of its own; a page that loads one still works.
 await p.addInitScript({ path: createRequire(import.meta.url).resolve("gsap/dist/gsap.min.js") });
+const { theme, library } = pieceTheme(dir, M);
+const look = resolveTheme(theme, library);
+// Zero specificity, so a page that sets its own variables keeps them.
+await p.addInitScript(([css, C]) => {
+  window.filmTheme = C;
+  document.addEventListener("DOMContentLoaded", () => {
+    const s = document.createElement("style");
+    s.textContent = css;
+    document.head.prepend(s);
+  });
+}, [`:where(:root){${themeVars(look)}}`, look.C]);
 p.on("pageerror", (e) => { console.error("PAGE ERROR", e.message); process.exit(1); });
 p.on("console", (m) => m.type() === "error" && console.error("console:", m.text()));
 await p.goto(`file://${join(dir, M.plate.html)}`);

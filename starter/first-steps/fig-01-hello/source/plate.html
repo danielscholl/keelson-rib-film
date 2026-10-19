@@ -3,31 +3,24 @@
 <head>
 <meta charset="utf-8">
 <style>
-  :root { --ink:#1e3a5f; --accent:#b5803a; --muted:#51607a; --done:#2f8f5b; }
   * { margin:0; box-sizing:border-box; }
   html, body { width:1920px; height:1080px; overflow:hidden; }
-  body {
-    font-family: system-ui, sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased;
-    background:
-      linear-gradient(rgba(30,58,95,.07) 1px, transparent 1px) 0 0/72px 72px,
-      linear-gradient(90deg, rgba(30,58,95,.07) 1px, transparent 1px) 0 0/72px 72px,
-      linear-gradient(180deg, #f3f5f8 0%, #e6eaf0 100%);
-  }
+  body { font-family: system-ui, sans-serif; color: var(--film-primary); background: var(--film-background); -webkit-font-smoothing: antialiased; }
   #header { position:absolute; left:128px; right:128px; top:34px; height:44px; display:flex; justify-content:space-between;
-    align-items:center; border-bottom:1.5px solid rgba(30,58,95,.45); font-size:18px;
+    align-items:center; border-bottom:1.5px solid var(--film-line); font-size:18px;
     letter-spacing:.2em; }
-  #boardName { position:relative; width:520px; height:24px; color:var(--muted); }
+  #boardName { position:relative; width:520px; height:24px; color:var(--film-muted); }
   #boardName span { position:absolute; right:0; top:0; opacity:0; white-space:nowrap; }
   .board { position:absolute; inset:0; opacity:0; }
   .title { position:absolute; left:0; right:0; top:300px; text-align:center; font-size:96px; font-weight:300; letter-spacing:.12em; opacity:0; }
   .chips { position:absolute; left:0; right:0; top:560px; display:flex; justify-content:center; gap:56px; }
-  .chip { width:340px; padding:28px 0; text-align:center; border:2px solid var(--ink); border-radius:16px; background:#fff;
+  .chip { width:340px; padding:28px 0; text-align:center; border:2px solid var(--film-primary); border-radius:16px; background:var(--film-paper);
     font-size:30px; font-weight:500; letter-spacing:.18em; opacity:0; }
   .heading { position:absolute; left:0; right:0; top:250px; text-align:center; font-size:64px; font-weight:300; letter-spacing:.12em; opacity:0; }
   .row { position:absolute; left:160px; right:160px; top:430px; display:flex; justify-content:space-between; }
-  .stage { width:230px; padding:34px 0; text-align:center; border:2px solid rgba(30,58,95,.35); border-radius:16px;
-    background:#fff; font-size:28px; font-weight:500; letter-spacing:.14em; color:var(--muted); opacity:0; }
-  .loop { position:absolute; left:0; right:0; top:680px; text-align:center; font-size:44px; font-weight:300; letter-spacing:.1em; color:var(--accent); opacity:0; }
+  .stage { width:230px; padding:34px 0; text-align:center; border:2px solid var(--film-line); border-radius:16px;
+    background:var(--film-paper); font-size:28px; font-weight:500; letter-spacing:.14em; color:var(--film-muted); opacity:0; }
+  .loop { position:absolute; left:0; right:0; top:680px; text-align:center; font-size:44px; font-weight:300; letter-spacing:.1em; color:var(--film-accent); opacity:0; }
 </style>
 </head>
 <body>
@@ -63,7 +56,9 @@ const $ = (id) => document.getElementById(id);
 const norm = (w) => w.toLowerCase().replace(/[^a-z0-9]/g, "");
 
 // The renderer calls setup with each board's span and each line's word times, and seeks the paused timeline.
+// Colors come from the series theme (--film-* variables and window.filmTheme).
 window.setup = (T, words) => {
+  const C = window.filmTheme;
   const tl = gsap.timeline({ paused: true });
   window.tl = tl;
   const lineAt = {};
@@ -89,11 +84,11 @@ window.setup = (T, words) => {
   show($("s-heading"), T.stages.s + 0.2, 0.6);
   for (const s of ["script", "voice", "motion", "cut", "check", "publish"]) {
     show($(`s-${s}`), W("n2", s) - 0.15, 0.3);
-    tl.to($(`s-${s}`), { color: "#1e3a5f", borderColor: "#1e3a5f", duration: 0.3 }, W("n2", s) - 0.15);
+    tl.to($(`s-${s}`), { color: C.primary, borderColor: C.primary, duration: 0.3 }, W("n2", s) - 0.15);
   }
   const again = W("n3", "cut again");
   show($("s-loop"), W("n3", "Change a line") - 0.1);
-  tl.to([$("s-cut"), $("s-check")], { borderColor: "#2f8f5b", color: "#2f8f5b", duration: 0.3 }, again);
+  tl.to([$("s-cut"), $("s-check")], { borderColor: C.accent, color: C.accent, duration: 0.3 }, again);
   return tl.duration();
 };
 </script>
