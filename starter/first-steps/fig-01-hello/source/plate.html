@@ -76,19 +76,25 @@ window.setup = (T, words) => {
     tl.set($(`bn-${id}`), { opacity: 1 }, T[id].s); tl.set($(`bn-${id}`), { opacity: 0 }, T[id].e);
   }
 
+  // Named moments become marks the manifest's sound effects land on.
+  const marks = {};
   show($("i-title"), T.idea.s + 0.2, 0.6);
-  show($("i-manifest"), W("n1", "manifest") - 0.2);
-  show($("i-voice"), W("n1", "voice") - 0.2);
-  show($("i-board"), W("n1", "board") - 0.2);
+  for (const c of ["manifest", "voice", "board"]) {
+    marks[`chip-${c}`] = W("n1", c) - 0.2;
+    show($(`i-${c}`), marks[`chip-${c}`]);
+  }
 
   show($("s-heading"), T.stages.s + 0.2, 0.6);
   for (const s of ["script", "voice", "motion", "cut", "check", "publish"]) {
-    show($(`s-${s}`), W("n2", s) - 0.15, 0.3);
+    marks[`stage-${s}`] = W("n2", s) - 0.15;
+    show($(`s-${s}`), marks[`stage-${s}`], 0.3);
     tl.to($(`s-${s}`), { color: C.primary, borderColor: C.primary, duration: 0.3 }, W("n2", s) - 0.15);
   }
   const again = W("n3", "cut again");
+  marks.again = again;
   show($("s-loop"), W("n3", "Change a line") - 0.1);
   tl.to([$("s-cut"), $("s-check")], { borderColor: C.accent, color: C.accent, duration: 0.3 }, again);
+  window.fnMarks = marks;
   return tl.duration();
 };
 </script>

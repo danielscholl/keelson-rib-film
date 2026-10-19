@@ -28,5 +28,5 @@ if [[ -n "${PHONE:-}" ]]; then
 fi
 echo "silence gaps:"
 ffmpeg -hide_banner -nostats -i "$v" -af "silencedetect=n=-40dB:d=0.8" -f null - 2>&1 \
-  | grep -oE "silence_(start|end): [0-9.]+" | paste - - | awk '{printf "  %6.2f -> %6.2f  (%.1fs)\n", $2, $4, $4-$2}'
+  | { grep -oE "silence_(start|end): [0-9.]+" || true; } | paste - - | awk '{printf "  %6.2f -> %6.2f  (%.1fs)\n", $2, $4, $4-$2}'
 ffmpeg -hide_banner -nostats -i "$v" -af ebur128 -f null - 2>&1 | grep -A1 "Integrated loudness" | grep "I:" | sed 's/^ */loudness: /'

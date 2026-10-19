@@ -21,6 +21,23 @@ scenes:
     frame: full
     trim: [stages, stages.end]
 
+# A bed under the whole piece, dipped under every line; `film loop` made it (audio/bed.prompt.txt).
+beds:
+  - { file: audio/bed.m4a, scene: b-idea, at: 0, volume: 0.7, duck: -7, presence: -6 }
+
+# Each effect lands on a moment the board page names in window.fnMarks.
+sfx:
+  - { sound: pop, scene: b-idea, at: chip-manifest, gain: -20 }
+  - { sound: pop, scene: b-idea, at: chip-voice, gain: -20, pitch: 2 }
+  - { sound: pop, scene: b-idea, at: chip-board, gain: -20, pitch: 4 }
+  - { sound: tick, scene: b-stages, at: stage-script, gain: -24 }
+  - { sound: tick, scene: b-stages, at: stage-voice, gain: -24, pitch: 2 }
+  - { sound: tick, scene: b-stages, at: stage-motion, gain: -24, pitch: 4 }
+  - { sound: tick, scene: b-stages, at: stage-cut, gain: -24, pitch: 5 }
+  - { sound: tick, scene: b-stages, at: stage-check, gain: -24, pitch: 7 }
+  - { sound: tick, scene: b-stages, at: stage-publish, gain: -24, pitch: 9 }
+  - { sound: chime, scene: b-stages, at: again, gain: -18 }
+
 lines:
   - { id: n1, scene: b-idea, at: n1, text: "This is your first film. It started as a manifest, got a voice, and was drawn on a board." }
   - { id: n2, scene: b-stages, at: n2, text: "Every piece moves through the same stages: script, voice, motion, cut, check, and publish." }

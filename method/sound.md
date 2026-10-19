@@ -27,6 +27,7 @@ An explainer can carry one bed under the opening and close and four to eight eff
 
 ## Beds and music
 
+- `film loop out.wav --len S [--bpm 96] [--chords Cmaj7,Am7,Fmaj7,G7]` synthesizes a light groove (electric piano, plucked arpeggio, sub bass, soft beat) with no service: enough for a draft or a sample, and the starter piece uses one. Real pieces get better music from `film lyria`.
 - `film lyria prompt.txt out` generates music (Gemini, `GEMINI_API_KEY`). Prompt the instrument, the tempo, the mood, and where it resolves; the tool saves the prompt beside the take.
 - Choose the window of a take by measurement: `film onsets` lists note onsets, and `film beats` writes `beats.json` (tempo, beats, downbeats, the drop). Start the music so its resolution or drop lands on the frame that matters, not on second zero.
 - Under narration, a bed is ducked and kept out of the voice's band: `duck:` lowers it under every line with short ramps, and `presence:` cuts a wide band around 2 kHz. `film bed` builds a self-contained bookend bed with the same dip and duck baked in.
