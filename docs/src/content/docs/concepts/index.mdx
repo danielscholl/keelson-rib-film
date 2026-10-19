@@ -1,0 +1,39 @@
+---
+title: Concepts
+description: "The model behind the Film rib: libraries, series and pieces, the production line, the gates, and looks and voices."
+sidebar:
+  label: Overview
+  order: 1
+---
+
+import { CardGrid, LinkCard } from "@astrojs/starlight/components";
+
+Four ideas carry the rib. A **library** holds series of pieces, each a folder
+with a manifest. The **production line** turns a manifest into a cut. **Gates**
+decide who looks before the next step. A **look** and a **voice**, set once per
+series, keep every piece in it recognizably the same. For the harness ideas these
+sit on (workflows, approval nodes, ribs), see Keelson's
+[concepts](https://keelsonrib.ai/docs/concepts/).
+
+<CardGrid>
+  <LinkCard
+    title="Libraries, series and pieces"
+    href="library-series-piece/"
+    description="Where films live, and the stages a piece moves through."
+  />
+  <LinkCard
+    title="The production line"
+    href="the-production-line/"
+    description="The film command, the steps of a cut, and why the manifest is the source."
+  />
+  <LinkCard
+    title="Gates and the reviewer"
+    href="gates/"
+    description="Who answers the storyboard, sample, cut and publish gates, and when an agent may."
+  />
+  <LinkCard
+    title="Looks and voices"
+    href="looks-and-voices/"
+    description="The series theme every card and board draws with, and the voice engines."
+  />
+</CardGrid>

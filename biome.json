@@ -14,7 +14,8 @@
       "!**/dist",
       "!bun.lock",
       "!design",
-      "!.beads"
+      "!.beads",
+      "!docs"
     ]
   },
   "formatter": {

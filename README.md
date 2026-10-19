@@ -5,6 +5,8 @@ films. You agree a storyboard, the production line renders the cut, your notes
 become revisions, and a gated step stages it for publishing. Agents on any
 provider, Copilot included, run it through the rib's tools and workflows.
 
+Docs: [danielscholl.github.io/keelson-rib-film](https://danielscholl.github.io/keelson-rib-film/)
+
 Status: early. The production line, `film-cut` and `film-publish` work; the
 method guide, the board and `film-revise` are being ported in.
 
