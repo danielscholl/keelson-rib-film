@@ -7,12 +7,15 @@ import type { Rib } from "@keelson/shared";
 import { probeToolchain } from "./doctor.ts";
 import { loadMethod, methodCorpus } from "./method.ts";
 import { registerFilmTools } from "./tools.ts";
+import { filmWorkflows } from "./workflows.ts";
 
 const rib: Rib = {
   id: "film",
   displayName: "Film",
 
   registerTools: () => registerFilmTools(),
+
+  contributeWorkflows: () => filmWorkflows(),
 
   contributeDocs: () => {
     const pages = loadMethod();

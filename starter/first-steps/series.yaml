@@ -1,0 +1,8 @@
+title: First steps
+prefix: fig
+theme:
+  series: FIRST STEPS
+gates:
+  cut: { human_first: 3 }
+publish:
+  dir: published/{series}/fig-{fig}
