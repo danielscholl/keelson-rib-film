@@ -5,10 +5,28 @@
 
 import type { Rib } from "@keelson/shared";
 import { probeToolchain } from "./doctor.ts";
+import { loadMethod, methodCorpus } from "./method.ts";
+import { registerFilmTools } from "./tools.ts";
 
 const rib: Rib = {
   id: "film",
   displayName: "Film",
+
+  registerTools: () => registerFilmTools(),
+
+  contributeDocs: () => {
+    const pages = loadMethod();
+    return pages.length === 0
+      ? []
+      : [
+          {
+            title: "Film method",
+            summary:
+              "How a narrated short is made: brief, angles, storyboard, sample, voice, motion, compose, review rounds and publish.",
+            content: methodCorpus(pages),
+          },
+        ];
+  },
 
   authStatus: async () => {
     const missing = probeToolchain().filter((t) => !t.found);
