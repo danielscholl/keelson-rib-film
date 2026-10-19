@@ -65,3 +65,42 @@ describe("film_guide", () => {
     expect(r.isError).toBe(true);
   });
 });
+
+describe("the shipped method", () => {
+  const pages = loadMethod();
+
+  test("serves every topic the overview names, overview first", () => {
+    expect(pages.map((p) => p.topic)).toEqual([
+      "method",
+      "capture",
+      "compose",
+      "craft",
+      "media",
+      "motion",
+      "review",
+      "series",
+      "sound",
+      "storyboard",
+    ]);
+  });
+
+  // The repo is public: method pages describe the craft, never one library or one person's machine.
+  test("carries nothing from a particular library or machine", () => {
+    const corpus = methodCorpus(pages);
+    for (const leak of [
+      /~\//,
+      /\/Users\//,
+      /workspace\/videos/,
+      /keelson-media/,
+      /claude\.ai\/artifact/,
+      /\.claude\//,
+      /Harper/,
+      /\bFIG\. \d/,
+      /\bDET\. \d/,
+      /Fieldnotes/,
+      /spi-workspace/,
+    ]) {
+      expect(corpus).not.toMatch(leak);
+    }
+  });
+});

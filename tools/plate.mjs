@@ -1,4 +1,4 @@
-// Render a short's plate boards (motion graphics on the blueprint sheet) to one video.
+// Render a short's plate boards (motion graphics on the series theme) to one video.
 // Usage: node plate.mjs <short-dir> [--only t1,t2,...] [--verify] [--fps N] [--subframes K] [--from S --to E]
 //   --only       writes PNG stills to raw/plate-stills for checking
 //   --verify     purity and font check: each sampled frame rendered from a cold seek and after playing up to it must

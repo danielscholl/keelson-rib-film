@@ -4,7 +4,7 @@ import { join } from "node:path";
 export const TOOLS_DIR = new URL("../tools", import.meta.url).pathname;
 
 const RUNNABLE = [".py", ".mjs", ".js", ".sh"] as const;
-const LIBRARY_MODULES = new Set(["filmlib.py", "cursor.js"]);
+const LIBRARY_MODULES = new Set(["filmlib.py", "cursor.js", "theme.mjs", "voices.py"]);
 
 export interface ToolInfo {
   name: string;
