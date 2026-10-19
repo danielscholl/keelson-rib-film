@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/danielscholl/keelson-rib-film/compare/v0.1.0...v0.1.1) (2026-10-19)
+
+
+### Fixed
+
+* **init:** refuse bare film_init in a busy folder ([#15](https://github.com/danielscholl/keelson-rib-film/issues/15)) ([571ac0d](https://github.com/danielscholl/keelson-rib-film/commit/571ac0de036b6eb45a781c2441530340d77d4734))
+
 ## 0.1.0 (2026-10-19)
 
 

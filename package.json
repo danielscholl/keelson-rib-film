@@ -1,6 +1,6 @@
 {
   "name": "@keelson/rib-film",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Keelson rib for narrated short films: a storyboard you approve, a cut the line renders, notes turned into revisions, and a publish step, run by agents on any provider.",
   "license": "Apache-2.0",
   "author": "Daniel Scholl",
