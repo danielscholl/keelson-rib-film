@@ -21,7 +21,7 @@ scenes:
     frame: full
     trim: [stages, stages.end]
 
-# A pad under the whole piece, dipped under every line; `film pad` made it (audio/bed.prompt.txt).
+# A bed under the whole piece, dipped under every line; `film loop` made it (audio/bed.prompt.txt).
 beds:
   - { file: audio/bed.m4a, scene: b-idea, at: 0, volume: 0.7, duck: -7, presence: -6 }
 

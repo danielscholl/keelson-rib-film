@@ -1,9 +1,9 @@
 {
- "out": "starter/first-steps/fig-01-hello/audio/bed.m4a",
  "len": 24.0,
- "chords": "C,Am,F,G",
- "bar": 6.0,
- "brightness": 1800.0,
+ "bpm": 96.0,
+ "chords": "Cmaj7,Am7,Fmaj7,G7",
+ "seed": 7,
  "lufs": -24.0,
- "seed": 7
+ "no_beat": false,
+ "no_arp": false
 }
