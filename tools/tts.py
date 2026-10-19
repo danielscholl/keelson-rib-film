@@ -1,30 +1,28 @@
 #!/usr/bin/env python3
-"""Render narration lines with Azure Speech, one WAV per line, and time every word.
+"""Render narration lines, one WAV per line, and time every word.
 
 Usage: tts.py <short-dir or short.yaml or script.json> [--only n3,n6 | --changed] [--align-only] [--voice ...] [--style ...]
-              [--engine azure|system]
 Lines come from short.yaml `lines` (or a script.json list): {"id", "text", optional "ssml", "voice", "style"}.
-"style" (or a top-level `style:`) wraps the line in mstts:express-as; on MAI voices only Ethan and Harper take one.
+The voice comes from --voice, the line, the manifest, then the series.yaml above it; voices.py lists the engines
+(Azure Speech, Azure OpenAI or Foundry, OpenAI, ElevenLabs, the system voice) and the settings each needs. With no
+voice set anywhere, Azure Speech is used when it is configured, else the system voice for a draft.
+"style" (or a top-level `style:`) wraps an Azure line in mstts:express-as (on MAI voices only Ethan and Harper take
+one) and is the speaking instruction on the OpenAI engines. "ssml" replaces the Azure <voice> body verbatim when a
+line needs a respelling, phonemes, or breaks; other engines speak "text", which the captions and word times use.
 `max_pause:` (or --max-pause) shortens any pause inside a line to that many seconds and trims the ends,
 before the words are timed; it is idempotent, so --align-only applies it to existing WAVs.
-"ssml" replaces the <voice> body verbatim when a line needs a respelling, phonemes, or breaks; "text"
-stays what the captions and the word times use.
 Writes narr/<id>.wav, narr/durations.json, and narr/words.json ({id: [[word, start, end], ...]}).
-MAI voices emit no word-boundary events, so word times come from Azure fast transcription of the
-rendered WAV, aligned back to the known text; words the recognizer misses are interpolated.
+ElevenLabs times its own words. Otherwise word times come from Azure fast transcription of the rendered WAV when
+Azure Speech is configured, aligned back to the known text (words the recognizer misses are interpolated), and are
+spread by word length when it is not.
 --align-only re-times existing WAVs without re-voicing them (takes vary between renders).
---changed voices only lines whose text, ssml or voice differ from narr/takes.json (or have no WAV);
---mark records the current lines there without voicing, for takes made before it existed.
-Reads the key from AZURE_SPEECH_KEY, or fetches it with az for the Foundry resource named by AZURE_AI_RESOURCE,
-AZURE_AI_GROUP and AZURE_SUBSCRIPTION_ID (environment, or the library's .env.local).
-The voice comes from --voice, the manifest, then the series.yaml above it.
-With no Azure settings, --engine defaults to system: the machine's own voice (say on macOS, espeak-ng on Linux),
-for drafts and first runs. It ignores ssml, style and Azure voice names, and spreads word times by length.
-Takes record the engine, so --changed re-voices system takes once Azure is configured.
+--changed voices only lines whose text, ssml, voice or style differ from narr/takes.json (or have no WAV), so
+changing the engine or voice re-voices every line; --mark records the current lines there without voicing.
+Settings come from the environment, or the library's .env.local.
 """
-import argparse, difflib, json, os, re, shutil, subprocess, sys, tempfile, urllib.request, uuid
-from xml.sax.saxutils import escape
+import argparse, difflib, json, os, re, subprocess, sys, urllib.request, uuid
 from filmlib import library_root, load_env, series_config
+from voices import key_for, missing, parse_voice, synth, take_key
 
 
 p = argparse.ArgumentParser()
@@ -36,21 +34,12 @@ p.add_argument("--mark", action="store_true")
 p.add_argument("--voice")
 p.add_argument("--style")
 p.add_argument("--max-pause", type=float)
-p.add_argument("--engine", choices=["azure", "system"])
-p.add_argument("--system-voice", help="voice name for the system engine (say -v / espeak-ng -v)")
-p.add_argument("--region")
-p.add_argument("--resource")
-p.add_argument("--group")
-p.add_argument("--subscription")
 a = p.parse_args()
 
 src = os.path.join(a.src, "short.yaml") if os.path.isdir(a.src) else a.src
 root = os.path.dirname(os.path.abspath(src))
 load_env(root)
-a.region = a.region or os.environ.get("AZURE_AI_REGION", "eastus2")
-a.resource = a.resource or os.environ.get("AZURE_AI_RESOURCE")
-a.group = a.group or os.environ.get("AZURE_AI_GROUP")
-a.subscription = a.subscription or os.environ.get("AZURE_SUBSCRIPTION_ID")
+region = os.environ.get("AZURE_AI_REGION", "eastus2")
 if src.endswith((".yaml", ".yml")):
     import yaml
     man = yaml.safe_load(open(src))
@@ -59,24 +48,18 @@ if src.endswith((".yaml", ".yml")):
     max_pause = a.max_pause or man.get("max_pause")
 else:
     lines, voice, style, max_pause = json.load(open(src)), a.voice, a.style, a.max_pause
-voice = voice or "en-US-Harper:MAI-Voice-2.1"
-azure_ready = os.environ.get("AZURE_SPEECH_KEY") or (a.resource and a.group and a.subscription)
-engine = a.engine or ("azure" if azure_ready else "system")
-if engine == "system":
-    say = next((b for b in ("say", "espeak-ng", "espeak") if shutil.which(b)), None)
-    if not say:
-        raise SystemExit("no voice: configure Azure Speech (AZURE_SPEECH_KEY, or AZURE_AI_RESOURCE, AZURE_AI_GROUP and "
-                         "AZURE_SUBSCRIPTION_ID), install espeak-ng, or record narr/<id>.wav yourself")
-    voice = f"system:{a.system_voice}" if a.system_voice else "system"
-    style = None
-    lines = [{k: v for k, v in l.items() if k not in ("ssml", "voice", "style")} for l in lines]
-    print(f"voicing with the system voice ({say}); set up Azure Speech for the real take", file=sys.stderr)
+if not voice and missing("azure"):
+    voice = "system"
+    print("no voice set and Azure Speech is not configured: voicing a draft with the system voice", file=sys.stderr)
+voice = parse_voice(voice)
+voice_of = lambda line: parse_voice(line["voice"]) if line.get("voice") else voice
+style_of = lambda line: line.get("style", style)
 only = set(filter(None, a.only.split(",")))
 narr = os.path.join(root, "narr")
 os.makedirs(narr, exist_ok=True)
 
-take_of = lambda line: [line["text"], line.get("ssml"), line.get("voice", voice)] + (
-    [line.get("style", style)] if line.get("style", style) else [])
+take_of = lambda line: [line["text"], line.get("ssml") if voice_of(line)["engine"] == "azure" else None,
+                        take_key(voice_of(line))] + ([style_of(line)] if style_of(line) else [])
 takes_path = os.path.join(narr, "takes.json")
 takes = json.load(open(takes_path)) if os.path.exists(takes_path) else {}
 if a.mark:
@@ -89,10 +72,12 @@ if a.changed:
     if not only:
         sys.exit(0)
 
-key = None if engine == "system" else os.environ.get("AZURE_SPEECH_KEY") or subprocess.run(
-    ["az", "cognitiveservices", "account", "keys", "list", "-g", a.group, "-n", a.resource,
-     "--subscription", a.subscription, "--query", "key1", "-o", "tsv"],
-    capture_output=True, text=True, check=True).stdout.strip()
+todo = [l for l in lines if not only or l["id"] in only]
+if not a.align_only:
+    for engine in sorted({voice_of(l)["engine"] for l in todo}):
+        if missing(engine):
+            raise SystemExit(f"voice engine {engine} needs {missing(engine)} (environment or the library's .env.local)")
+key = None if missing("azure") else key_for("speech")
 
 
 def load(name):
@@ -105,32 +90,6 @@ def probe(path):
                                 capture_output=True, text=True).stdout)
 
 
-def synth(line, path):
-    body = line.get("ssml") or escape(line["text"])
-    st = line.get("style", style)
-    if st:
-        body = f"<mstts:express-as style='{st}'>{body}</mstts:express-as>"
-    ssml = (f"<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xmlns:mstts='https://www.w3.org/2001/mstts' "
-            f"xml:lang='en-US'><voice name='{line.get('voice', voice)}'>{body}</voice></speak>")
-    req = urllib.request.Request(
-        f"https://{a.region}.tts.speech.microsoft.com/cognitiveservices/v1", data=ssml.encode(),
-        headers={"Ocp-Apim-Subscription-Key": key, "Content-Type": "application/ssml+xml",
-                 "X-Microsoft-OutputFormat": "riff-48khz-16bit-mono-pcm", "User-Agent": "videos-tools"})
-    with urllib.request.urlopen(req) as r, open(path, "wb") as f:
-        f.write(r.read())
-
-
-def synth_system(line, path):
-    with tempfile.TemporaryDirectory() as tmp:
-        raw = os.path.join(tmp, "line.aiff" if say == "say" else "line.wav")
-        cmd = [say, "-o" if say == "say" else "-w", raw]
-        if a.system_voice:
-            cmd += ["-v", a.system_voice]
-        subprocess.run(cmd + [line["text"]], check=True)
-        subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", raw, "-ar", "48000", "-ac", "1",
-                        "-c:a", "pcm_s16le", path], check=True)
-
-
 def transcribe(path):
     boundary = uuid.uuid4().hex
     body = (f"--{boundary}\r\nContent-Disposition: form-data; name=\"definition\"\r\n\r\n"
@@ -138,7 +97,7 @@ def transcribe(path):
             f"name=\"audio\"; filename=\"line.wav\"\r\nContent-Type: audio/wav\r\n\r\n").encode()
     body += open(path, "rb").read() + f"\r\n--{boundary}--\r\n".encode()
     req = urllib.request.Request(
-        f"https://{a.region}.api.cognitive.microsoft.com/speechtotext/transcriptions:transcribe?api-version=2024-11-15",
+        f"https://{region}.api.cognitive.microsoft.com/speechtotext/transcriptions:transcribe?api-version=2024-11-15",
         data=body, headers={"Ocp-Apim-Subscription-Key": key, "Content-Type": f"multipart/form-data; boundary={boundary}"})
     with urllib.request.urlopen(req) as r:
         d = json.load(r)
@@ -207,20 +166,20 @@ def align(text, heard, dur):
 
 
 durations, words = load("durations.json"), load("words.json")
-for line in lines:
-    if only and line["id"] not in only:
-        continue
+for line in todo:
     path = os.path.join(narr, f"{line['id']}.wav")
+    timed = None
     if not a.align_only:
-        (synth_system if engine == "system" else synth)(line, path)
+        timed = synth(voice_of(line), line, path, style_of(line))
         takes[line["id"]] = take_of(line)
     if max_pause:
         tighten(path, float(max_pause))
+        timed = None
     d = probe(path)
     durations[line["id"]] = round(d, 3)
-    words[line["id"]], missed = align(line["text"], [] if engine == "system" else transcribe(path), d)
-    missed = 0 if engine == "system" else missed
-    note = f"  ({missed} word{'s' * (missed != 1)} interpolated)" if missed else ""
+    heard = timed or (transcribe(path) if key else [])
+    words[line["id"]], missed = align(line["text"], heard, d)
+    note = f"  ({missed} word{'s' * (missed != 1)} interpolated)" if missed and heard else ""
     print(f"{line['id']}\t{d:.2f}s\t{line['text'][:64]}{note}", file=sys.stderr)
 
 json.dump(durations, open(os.path.join(narr, "durations.json"), "w"), indent=1)

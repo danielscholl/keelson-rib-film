@@ -58,16 +58,48 @@ Captions, title cards and the frame around footage draw with it, and plate
 boards read it as `--film-*` CSS variables, so a board page written against
 those variables follows the series.
 
+## Voice
+
+`voice` in `series.yaml` (or a manifest, or one line) picks the engine:
+
+```yaml
+voice: en-US-AvaMultilingualNeural        # a bare name is an Azure Speech voice
+```
+
+```yaml
+voice: elevenlabs:21m00Tcm4TlvDq8ikWAM    # engine:name
+```
+
+```yaml
+voice:
+  engine: azure-openai     # azure, azure-openai, openai, elevenlabs or system
+  name: alloy
+  model: gpt-4o-mini-tts   # the deployment name on Azure
+  instructions: Calm and unhurried.
+```
+
+With no voice set anywhere, Azure Speech is used when it is configured, else
+the system voice for a draft. Changing the voice re-voices every line on the
+next cut. A line's `ssml` applies to Azure Speech only; the other engines speak
+its `text`.
+
 ## Media services
 
 All optional. Put the settings in the environment or in `.env.local` at the
-library root (the starter's `.gitignore` keeps it out of git).
+library root (the starter's `.gitignore` keeps it out of git). `film_doctor`
+shows which are set.
 
-| Service | Tools | Settings |
+| Service | Used by | Settings |
 |---|---|---|
-| Azure Speech | `tts`: narration with word timing | `AZURE_SPEECH_KEY`, or `AZURE_AI_RESOURCE`, `AZURE_AI_GROUP` and `AZURE_SUBSCRIPTION_ID` with `az` signed in |
-| Azure OpenAI (Sora) | `sora`: generated clips | `AZURE_OPENAI_KEY`, or the same resource settings |
+| Azure Speech | voice `azure`; word timing for every engine except ElevenLabs | `AZURE_SPEECH_KEY`, or `AZURE_AI_RESOURCE`, `AZURE_AI_GROUP` and `AZURE_SUBSCRIPTION_ID` with `az` signed in |
+| Azure OpenAI or Foundry | voice `azure-openai`; `sora` clips | `AZURE_OPENAI_ENDPOINT` or `AZURE_AI_RESOURCE`, with `AZURE_OPENAI_KEY` or the `az` resource settings |
+| OpenAI | voice `openai` | `OPENAI_API_KEY` |
+| ElevenLabs | voice `elevenlabs` | `ELEVENLABS_API_KEY` |
 | Gemini | `veo`, `lyria`, `gimg`: clips, music, images | `GEMINI_API_KEY` |
+
+Without Azure Speech, word times on the azure-openai, openai and system voices
+are spread by word length, which is close enough for captions but looser for
+boards that animate on a word.
 
 ## Develop
 

@@ -42,3 +42,11 @@ describe("parsing", () => {
     expect(parseSeries("gates: [\n").error).toContain("not valid YAML");
   });
 });
+
+describe("voice", () => {
+  test("a voice is a name or an engine mapping, and an unknown engine is reported", () => {
+    expect(parseSeries("voice: en-US-Ava\n").error).toBeUndefined();
+    expect(parseSeries("voice: { engine: elevenlabs, name: abc }\n").error).toBeUndefined();
+    expect(parseSeries("voice: { engine: polly }\n").error).toContain("series.yaml");
+  });
+});
