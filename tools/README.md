@@ -1,13 +1,15 @@
 # tools
 
-The shared production line. Everything that does not vary between shorts lives here; the creative choices stay in each short's `short.yaml`. Run `bun install` here once (Playwright drives Chrome for the cards).
+The production line. Everything that does not vary between shorts lives here; the creative choices stay in each short's `short.yaml` and its series' `series.yaml`. Run any tool with `film <tool> <args>` (`bin/film.ts`): Python tools run in this folder's uv project, Node tools use the rib's packages, and Playwright drives your installed Google Chrome.
+
+The library is the folder a short lives in: `FILM_LIBRARY`, else the nearest folder above the short with `assets/` or `.git`. Bookends come from `<library>/assets/bookends/`, extra card kinds from `<library>/assets/cards/*.mjs`, and service settings from the environment or `<library>/.env.local` (`FILM_ENV_FILE` overrides). Nothing a tool writes lands in the rib.
 
 | Tool | Does |
 |---|---|
 | `tts.py <short-dir>` | One WAV per line (Azure Speech, Harper by default), `narr/durations.json`, and real word times in `narr/words.json`. `--only n3,n6` re-voices some lines; `--align-only` re-times existing takes. |
-| `compose.py <short-dir>` | Reads `short.yaml`, renders `cards/` through `cards.mjs`, writes `final.mp4`, `final.srt`, and `build/timeline.json`. `--dry` prints the timeline and every gap without rendering. Optional `sfx` cues, bed `duck` and `presence`, and a two-pass `loudness` target (shapes in `skills/narrated-video/references/compose.md`). |
-| `plate.mjs <short-dir>` | Renders the manifest's `plate` boards (an HTML/GSAP page on the blueprint sheet) to one video, each board timed by its narration, beats on real word times, and writes `source/plate-marks.json` so scenes can trim one board each. `--only t1,t2` writes stills; `--verify` checks the page is a pure function of time and no font fell back; `--fps 60 --subframes 4` adds motion blur; `--from S --to E` renders one window. FIG. 01's `source/plate.html` is a worked board page. Chrome runs with file access, so a board page can import ES modules from disk (`fieldnotes/kit` does). |
-| `cards.mjs <spec.json>` | The one card renderer: viewport chrome, fig tag, sheet card, captions, callouts, and the shared bookend cards. |
+| `compose.py <short-dir>` | Reads `short.yaml`, renders `cards/` through `cards.mjs`, writes `final.mp4`, `final.srt`, and `build/timeline.json`. `--dry` prints the timeline and every gap without rendering. Optional `sfx` cues, bed `duck` and `presence`, and a two-pass `loudness` target (shapes in the method's compose page, `film_guide compose`). Every cut writes `build/cut.json`, a fingerprint of its inputs that `film_status` uses to tell a stale cut. |
+| `plate.mjs <short-dir>` | Renders the manifest's `plate` boards (an HTML/GSAP page on the blueprint sheet) to one video, each board timed by its narration, beats on real word times, and writes `source/plate-marks.json` so scenes can trim one board each. `--only t1,t2` writes stills; `--verify` checks the page is a pure function of time and no font fell back; `--fps 60 --subframes 4` adds motion blur; `--from S --to E` renders one window. Chrome runs with file access, so a board page can import ES modules from disk. |
+| `cards.mjs <spec.json>` | The card renderer: viewport chrome, fig tag, sheet card, captions, callouts. The series `theme` sets `brand`, `series`, `mark` (inline SVG or a library path; `{ink}` and `{accent}` are filled in) and `colors`; a library adds kinds such as its bookend cards. |
 | `qa.sh final.mp4 <t...>` | Contact sheet, silence gaps, loudness. `PHONE=<t>` adds one frame at 405 px wide. |
 | `sora.py`, `frames2mp4.py`, `cursor.js` | Generated clips, CDP screencast to video, and the injected cursor for captures. |
 | `autoscan.py <short-dir>` | Defect candidates from the encoded cut into `qa/autoscan.md`: pops, one-frame flashes, flash rate over the WCAG limit, static spans, an empty first frame, a loop seam. |
@@ -16,6 +18,7 @@ The shared production line. Everything that does not vary between shorts lives h
 | `onsets.py <audio>` | Note onsets and the RMS envelope, to choose a window of a music take. |
 | `aqa.py <audio or video>` | Audio QA by measurement: loudness, LRA, true peak, band levels per window. |
 | `bed.py out.wav ...` | A self-contained bed: a music window, foley, a 2 kHz dip and a duck under one line, at a target loudness. |
+| `publish.py <short-dir>` | Stages the web copy (mp4, poster, thumbnail, captions) where the series' `publish` block says. Never pushes. |
 | `gimg.py`, `veo.py`, `lyria.py` | Gemini images, Veo clips (first and last frame), Lyria music; each reads `GEMINI_API_KEY` and saves its prompt beside the output. |
 
 ## short.yaml

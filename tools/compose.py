@@ -14,11 +14,11 @@ Optional sound keys: `sfx` cues (a sfx.py voice or a file, placed so its peak la
 `duck` and `presence` on a bed (dB under every line; a 2 kHz cut out of the voice's band), and `loudness`
 (a LUFS target measured in two passes; without it the mix gets the single-pass -16).
 """
-import argparse, json, os, re, subprocess, sys
+import argparse, hashlib, json, os, re, subprocess, sys
 import yaml
+from filmlib import library_root, series_config
 
 TOOLS = os.path.dirname(os.path.abspath(__file__))
-LIB = os.path.dirname(TOOLS)
 VP = (128, 100, 1664, 936)
 FULL = (0, 0, 1920, 1080)
 AMBIENT = {"open": 0.35, "close": 0.4}
@@ -28,7 +28,15 @@ ap.add_argument("short"); ap.add_argument("--out", default="final.mp4")
 ap.add_argument("--cards-only", action="store_true"); ap.add_argument("--dry", action="store_true")
 args = ap.parse_args()
 root = os.path.abspath(args.short)
+
+
+LIB = library_root(root)
+S = series_config(root, LIB)
 M = yaml.safe_load(open(os.path.join(root, "short.yaml")))
+for key in ("voice", "bookends", "crossfade", "captions", "caption_tone", "loudness", "canvas"):
+    if key not in M and key in S:
+        M[key] = S[key]
+THEME = {**(S.get("theme") or {}), **(M.get("theme") or {})}
 here = lambda p: p if os.path.isabs(p) else os.path.join(root, p)
 CW, CH = (int(v) for v in M.get("canvas", (1920, 1080)))  # a 9:16 or 1:1 cut sets canvas; viewport frames assume 1920x1080
 FULL = (0, 0, CW, CH)
@@ -55,13 +63,22 @@ def load_marks(spec):
 fig, title, X = str(M["fig"]), M["title"], float(M.get("crossfade", 0.5))
 book = M.get("bookends") or {}
 segs = [{**s, "source": here(s["source"])} for s in M["scenes"] if s.get("cold")]
+
+
+def bookend(kind, name):
+    path = os.path.join(LIB, "assets", "bookends", f"{kind}-{name}.mp4")
+    if not os.path.exists(path):
+        raise SystemExit(f"bookend {kind}: {name!r} needs {path} (set FILM_LIBRARY if the library is elsewhere)")
+    return path
+
+
 if book.get("open"):
-    segs.append({"id": "open", "source": f"{LIB}/assets/bookends/open-{book['open']}.mp4", "frame": "full", "bookend": True})
+    segs.append({"id": "open", "source": bookend("open", book["open"]), "frame": "full", "bookend": True})
 for s in M["scenes"]:
     if not s.get("cold"):
         segs.append({**s, "source": here(s["source"])})
 if book.get("close"):
-    segs.append({"id": "close", "source": f"{LIB}/assets/bookends/close-{book['close']}.mp4", "frame": "full", "bookend": True,
+    segs.append({"id": "close", "source": bookend("close", book["close"]), "frame": "full", "bookend": True,
                  **({"xfade": book["xfade"]} if "xfade" in book else {})})
 by_id = {s["id"]: s for s in segs}
 
@@ -142,7 +159,8 @@ render = [figtag, sheet]
 for s in segs:
     if s.get("frame") == "viewport":
         render.append({"kind": "viewport", "file": f"viewport-{s['id']}.png", "rect": VP,
-                       "header": M.get("viewport_header", f"<b>KEELSON</b> &nbsp;·&nbsp; FIG. {fig} &nbsp;·&nbsp; {title.upper()}"),
+                       "header": M.get("viewport_header", (f"<b>{THEME['brand']}</b> &nbsp;·&nbsp; " if THEME.get("brand") else "")
+                                       + f"FIG. {fig} &nbsp;·&nbsp; {title.upper()}"),
                        "label": s.get("label", "")})
 tone = M.get("caption_tone", "light")
 for k, ln in enumerate(lines):
@@ -159,7 +177,12 @@ for k, c in enumerate(cards):
 card_dir = os.path.join(root, "cards")
 build = os.path.join(root, "build")
 os.makedirs(build, exist_ok=True)
-json.dump({"out": card_dir, "cards": render}, open(os.path.join(build, "cards.json"), "w"), indent=1)
+spec = {"out": card_dir, "cards": render, "library": LIB}
+if THEME:
+    spec["theme"] = THEME
+if os.path.isdir(os.path.join(LIB, "assets", "cards")):
+    spec["kinds"] = os.path.join(LIB, "assets", "cards")
+json.dump(spec, open(os.path.join(build, "cards.json"), "w"), indent=1)
 if not args.dry:
     subprocess.run(["node", os.path.join(TOOLS, "cards.mjs"), os.path.join(build, "cards.json")], check=True, cwd=TOOLS)
 if args.cards_only:
@@ -340,4 +363,32 @@ subprocess.run(["ffmpeg", "-loglevel", "error", "-y", *inputs, "-/filter_complex
                 "-map", "[vout]", "-map", "[aout]", "-c:v", "libx264", "-preset", "slow", "-crf", "18", "-pix_fmt", "yuv420p",
                 "-color_range", "tv", "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", "-t", f"{total:.3f}",
                 os.path.join(root, args.out)], check=True)
+
+# The cut record: what this master was made from, so a later change to any of it reads as stale.
+# Captures and bookends are recorded by size; hashing gigabytes of footage on every cut costs too much.
+BIG = 32 * 1024 * 1024
+
+
+def fingerprint(path):
+    size = os.path.getsize(path)
+    if size > BIG:
+        return f"size:{size}"
+    h = hashlib.sha256()
+    with open(path, "rb") as fh:
+        for chunk in iter(lambda: fh.read(1 << 20), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+used = {os.path.join(root, "short.yaml")}
+for dirpath, _, files in os.walk(os.path.join(root, "source")):
+    used.update(os.path.join(dirpath, n) for n in files)
+used.update(ln["wav"] for ln in lines)
+used.update(s["source"] for s in segs)
+inputs_rec = {}
+for path in sorted(used):
+    if os.path.exists(path):
+        key = os.path.relpath(path, root) if path.startswith(root + os.sep) else path
+        inputs_rec[key] = fingerprint(path)
+json.dump({"out": args.out, "inputs": inputs_rec}, open(os.path.join(build, "cut.json"), "w"), indent=1)
 print(os.path.join(root, args.out))

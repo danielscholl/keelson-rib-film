@@ -15,20 +15,12 @@ rendered WAV, aligned back to the known text; words the recognizer misses are in
 --changed voices only lines whose text, ssml or voice differ from narr/takes.json (or have no WAV);
 --mark records the current lines there without voicing, for takes made before it existed.
 Reads the key from AZURE_SPEECH_KEY, or fetches it with az for the Foundry resource named by AZURE_AI_RESOURCE,
-AZURE_AI_GROUP and AZURE_SUBSCRIPTION_ID (environment, or tools/.env.local).
+AZURE_AI_GROUP and AZURE_SUBSCRIPTION_ID (environment, or the library's .env.local).
+The voice comes from --voice, the manifest, then the series.yaml above it.
 """
 import argparse, difflib, json, os, re, subprocess, sys, urllib.request, uuid
 from xml.sax.saxutils import escape
-
-def _local_env(path=os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env.local")):
-    if os.path.exists(path):
-        for ln in open(path):
-            k, _, v = ln.strip().partition("=")
-            if k and not k.startswith("#"):
-                os.environ.setdefault(k, v)
-
-
-_local_env()
+from filmlib import library_root, load_env, series_config
 
 
 p = argparse.ArgumentParser()
@@ -48,10 +40,12 @@ a = p.parse_args()
 
 src = os.path.join(a.src, "short.yaml") if os.path.isdir(a.src) else a.src
 root = os.path.dirname(os.path.abspath(src))
+load_env(root)
 if src.endswith((".yaml", ".yml")):
     import yaml
     man = yaml.safe_load(open(src))
     lines, voice, style = man["lines"], a.voice or man.get("voice"), a.style or man.get("style")
+    voice = voice or series_config(root, library_root(root)).get("voice")
     max_pause = a.max_pause or man.get("max_pause")
 else:
     lines, voice, style, max_pause = json.load(open(src)), a.voice, a.style, a.max_pause

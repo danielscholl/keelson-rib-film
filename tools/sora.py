@@ -3,22 +3,16 @@
 
 Usage: sora.py prompt.txt out.mp4 [--seconds 4] [--size 1280x720] [--remix VIDEO_ID]
 Reads the key from AZURE_OPENAI_KEY, or fetches it with az for the Foundry resource named by AZURE_AI_RESOURCE,
-AZURE_AI_GROUP and AZURE_SUBSCRIPTION_ID (environment, or tools/.env.local).
+AZURE_AI_GROUP and AZURE_SUBSCRIPTION_ID (environment, or the library's .env.local).
 Writes out.mp4 and out.prompt.txt (model, settings, job id, prompt) so the asset stays reproducible.
 --remix reworks an earlier job (kept 24 h) with the new prompt; its length and size carry over.
 The deployment allows about one job at a time; run variants sequentially (429s are retried).
 """
 import argparse, json, os, subprocess, sys, time, urllib.request
 
-def _local_env(path=os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env.local")):
-    if os.path.exists(path):
-        for ln in open(path):
-            k, _, v = ln.strip().partition("=")
-            if k and not k.startswith("#"):
-                os.environ.setdefault(k, v)
+from filmlib import load_env
 
-
-_local_env()
+load_env()
 
 
 p = argparse.ArgumentParser()
