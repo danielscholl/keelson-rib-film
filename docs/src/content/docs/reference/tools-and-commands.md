@@ -17,7 +17,9 @@ the harness [tool registry](https://keelsonrib.ai/docs/guides/using-mcp/).
 | `film_doctor` | `library?` | the toolchain found or missing with a fix, each media service on or off with how to turn it on, and the exact `film` command |
 | `film_init` | `dir?` | the files written and kept, the sample piece, and the next step |
 
-`library` and `dir` default to the chat's project folder. `film_doctor` reads
+`library` and `dir` default to the chat's project folder; over MCP with no
+project, that is the server's folder, so pass them. With no `dir`, `film_init`
+refuses a folder that isn't empty, a git repo or a library. `film_doctor` reads
 only whether a setting exists, never its value. `film_status` answers with a
 per-series count instead when a library is too large for one result; pass
 `series` to narrow it.

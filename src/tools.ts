@@ -2,7 +2,7 @@ import { isAbsolute, join, resolve } from "node:path";
 import type { ToolDefinition } from "@keelson/shared";
 import { z } from "@keelson/shared";
 import { configuredNames, probeServices, probeToolchain } from "./doctor.ts";
-import { initLibrary, STARTER_PIECE } from "./init.ts";
+import { initLibrary, isLibrarySite, STARTER_PIECE } from "./init.ts";
 import { libraryRootFor, scanLibrary } from "./library.ts";
 import { loadMethod, METHOD_DIR, type MethodPage } from "./method.ts";
 import { decideGate, reviewerMinutes } from "./series.ts";
@@ -187,14 +187,26 @@ export function filmInitTool(): ToolDefinition {
     }),
     async execute(input, ctx) {
       const { dir } = input as { dir?: string };
+      if (!dir && !isLibrarySite(ctx.cwd)) {
+        ctx.emit({
+          type: "tool_result",
+          toolUseId: "",
+          content: JSON.stringify({
+            error: `${ctx.cwd} is not empty, a git repo or a film library; pass dir to say where the library goes`,
+          }),
+          isError: true,
+        });
+        return;
+      }
       const result = initLibrary(dir ? resolve(ctx.cwd, dir) : ctx.cwd);
+      const sample = join(result.library, STARTER_PIECE);
       ctx.emit({
         type: "tool_result",
         toolUseId: "",
         content: JSON.stringify({
           ...result,
-          sample: STARTER_PIECE,
-          next: `run the film-cut workflow with arguments ${STARTER_PIECE}`,
+          sample,
+          next: `run the film-cut workflow with arguments ${sample}`,
         }),
       });
     },

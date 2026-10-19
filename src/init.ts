@@ -4,6 +4,13 @@ import { join, relative, resolve, sep } from "node:path";
 export const STARTER_DIR = new URL("../starter", import.meta.url).pathname;
 export const STARTER_PIECE = "first-steps/fig-01-hello";
 
+// A bare "start a library here" is safe only in an empty folder, a git repo, or a library already.
+export function isLibrarySite(dir: string): boolean {
+  if (!existsSync(dir)) return true;
+  if (existsSync(join(dir, ".git")) || existsSync(join(dir, "assets"))) return true;
+  return readdirSync(dir).every((name) => name.startsWith("."));
+}
+
 export interface InitResult {
   library: string;
   written: string[];
