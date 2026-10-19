@@ -26,6 +26,10 @@ export const seriesSchema = z
       })
       .optional(),
     ignore: z.array(z.string().min(1)).optional(),
+    theme: z
+      .object({ look: z.enum(["plain", "blueprint", "dark"]).optional() })
+      .passthrough()
+      .optional(),
   })
   .passthrough();
 
