@@ -9,7 +9,20 @@ export const seriesSchema = z
   .object({
     title: z.string().min(1).optional(),
     prefix: z.string().min(1).optional(),
-    voice: z.string().min(1).optional(),
+    voice: z
+      .union([
+        z.string().min(1),
+        z
+          .object({
+            engine: z.enum(["azure", "azure-openai", "openai", "elevenlabs", "system"]),
+            name: z.string().min(1).optional(),
+            model: z.string().min(1).optional(),
+            instructions: z.string().min(1).optional(),
+            settings: z.record(z.string(), z.unknown()).optional(),
+          })
+          .strict(),
+      ])
+      .optional(),
     bookends: z.object({ open: z.string().optional(), close: z.string().optional() }).optional(),
     gates: z
       .object({

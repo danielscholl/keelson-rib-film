@@ -69,18 +69,34 @@ export function probeServices(names: Set<string>, hasAz: boolean): ServiceProbe[
     names.has("AZURE_SUBSCRIPTION_ID");
   const azureHow =
     "set AZURE_AI_RESOURCE, AZURE_AI_GROUP and AZURE_SUBSCRIPTION_ID (and sign in with az), or";
+  const azureOpenAi =
+    (names.has("AZURE_OPENAI_KEY") &&
+      (names.has("AZURE_OPENAI_ENDPOINT") || names.has("AZURE_AI_RESOURCE"))) ||
+    azureResource;
   return [
     {
       service: "Azure Speech",
-      tools: "tts (narration and word timing)",
+      tools: "tts voice azure (Azure and MAI voices, word timing for every engine)",
       on: names.has("AZURE_SPEECH_KEY") || azureResource,
       how: `${azureHow} AZURE_SPEECH_KEY`,
     },
     {
-      service: "Sora (Azure OpenAI)",
-      tools: "sora (generated clips)",
-      on: names.has("AZURE_OPENAI_KEY") || azureResource,
-      how: `${azureHow} AZURE_OPENAI_KEY`,
+      service: "Azure OpenAI or Foundry",
+      tools: "tts voice azure-openai (speech model deployments), sora (generated clips)",
+      on: azureOpenAi,
+      how: `${azureHow} AZURE_OPENAI_KEY with AZURE_OPENAI_ENDPOINT`,
+    },
+    {
+      service: "OpenAI",
+      tools: "tts voice openai",
+      on: names.has("OPENAI_API_KEY"),
+      how: "set OPENAI_API_KEY",
+    },
+    {
+      service: "ElevenLabs",
+      tools: "tts voice elevenlabs (times its own words)",
+      on: names.has("ELEVENLABS_API_KEY"),
+      how: "set ELEVENLABS_API_KEY",
     },
     {
       service: "Gemini",

@@ -146,7 +146,7 @@ export function doctorReport(cwd: string, library?: string) {
       on: s.on,
       ...(s.on ? {} : { how: s.how }),
     })),
-    note: "Services are optional: storyboard, motion, compose and QA need none. Narration needs Azure Speech, or recorded WAVs in narr/.",
+    note: "Services are optional: storyboard, motion, compose and QA need none. Without a voice service, narration uses the system voice for drafts; set voice in series.yaml to pick an engine (azure, azure-openai, openai, elevenlabs, system).",
   };
 }
 
@@ -154,7 +154,7 @@ export function filmDoctorTool(): ToolDefinition {
   return {
     name: "film_doctor",
     description:
-      "What this machine can make: the toolchain the production line needs (ffmpeg, uv, node, Chrome) and which optional media services are configured (Azure Speech for narration, Sora, Gemini for Veo, Lyria and images), with how to turn each on. Reads only whether settings exist, never their values. Use before planning a piece that needs generated footage, music or narration.",
+      "What this machine can make: the toolchain the production line needs (ffmpeg, uv, node, Chrome) and which optional media services are configured (voice engines: Azure Speech, Azure OpenAI or Foundry, OpenAI, ElevenLabs; Sora; Gemini for Veo, Lyria and images), with how to turn each on. Reads only whether settings exist, never their values. Use before planning a piece that needs generated footage, music or narration.",
     inputSchema: z.object({
       library: z
         .string()

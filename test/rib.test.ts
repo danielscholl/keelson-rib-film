@@ -54,13 +54,15 @@ describe("media services", () => {
       new Set(["AZURE_AI_RESOURCE", "AZURE_AI_GROUP", "AZURE_SUBSCRIPTION_ID"]),
       true,
     );
-    expect(azure.map((s) => s.on)).toEqual([true, true, false]);
+    expect(azure.map((s) => s.on)).toEqual([true, true, false, false, false]);
     const noAz = probeServices(
       new Set(["AZURE_AI_RESOURCE", "AZURE_AI_GROUP", "AZURE_SUBSCRIPTION_ID"]),
       false,
     );
     expect(noAz.some((s) => s.on)).toBe(false);
-    expect(probeServices(new Set(["GEMINI_API_KEY"]), false)[2]?.on).toBe(true);
+    expect(
+      probeServices(new Set(["ELEVENLABS_API_KEY", "GEMINI_API_KEY"]), false).map((s) => s.on),
+    ).toEqual([false, false, false, true, true]);
   });
 
   test("names come from the environment and the env file, empty values do not count", () => {
