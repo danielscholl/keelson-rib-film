@@ -1,0 +1,9 @@
+{
+ "out": "starter/first-steps/fig-01-hello/audio/bed.m4a",
+ "len": 24.0,
+ "chords": "C,Am,F,G",
+ "bar": 6.0,
+ "brightness": 1800.0,
+ "lufs": -24.0,
+ "seed": 7
+}
