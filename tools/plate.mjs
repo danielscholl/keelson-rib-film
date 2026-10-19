@@ -13,7 +13,7 @@
 // in plate seconds, words[id] = [[word, start, end], ...] relative to the line. Writes source/plate-marks.json
 // ({ board: s, "board.end": e, lineId: n }) for compose, and the encoded video.
 import { chromium } from "playwright";
-import { readFileSync, writeFileSync, mkdirSync, rmSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, mkdtempSync, rmSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { execFileSync } from "node:child_process";
 import { tmpdir } from "node:os";
@@ -90,10 +90,11 @@ if (verify) {
   const probes = new Set(Array.from({ length: 12 }, (_, k) => +((k + 0.5) * t / 12).toFixed(3)));
   for (const bd of Object.values(T)) probes.add(+Math.min(bd.s + 0.25, t - 0.01).toFixed(3));
   const raw = (buf, name) => {
-    const f = join(tmpdir(), `plate-verify-${process.pid}-${name}.png`);
+    const dir = mkdtempSync(join(tmpdir(), "plate-verify-"));
+    const f = join(dir, `${name}.png`);
     writeFileSync(f, buf);
     const px = execFileSync("ffmpeg", ["-v", "error", "-i", f, "-f", "rawvideo", "-pix_fmt", "rgb24", "-"], { maxBuffer: 1 << 26 });
-    rmSync(f, { force: true });
+    rmSync(dir, { recursive: true, force: true });
     return px;
   };
   const bad = [];
