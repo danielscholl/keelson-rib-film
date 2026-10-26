@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/danielscholl/keelson-rib-film/compare/v0.1.1...v0.1.2) (2026-10-26)
+
+
+### Fixed
+
+* **workflows:** run film-cut and film-publish unsandboxed ([#21](https://github.com/danielscholl/keelson-rib-film/issues/21)) ([1f91eb2](https://github.com/danielscholl/keelson-rib-film/commit/1f91eb260a67306795262601379bffab47e0a2c0))
+
 ## [0.1.1](https://github.com/danielscholl/keelson-rib-film/compare/v0.1.0...v0.1.1) (2026-10-19)
 
 
