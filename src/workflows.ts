@@ -25,6 +25,8 @@ export function filmCutWorkflow(film: string = filmCommand()): RibWorkflowContri
   return {
     definition: {
       name: "film-cut",
+      // film runs a nested bun that drives uv, Chrome and cloud voices, none of which work sandboxed
+      sandbox: { enabled: false },
       description:
         'Use when: a piece has an approved storyboard and its manifest, and it is time to render the cut. Triggers: "cut ep-03", "render the short", "make the video for this piece". Does: voices changed lines, renders the plate when the piece has one, composes the master with captions and a cut record, writes the review page and autoscan, then stops at the cut gate; the series policy decides whether the reviewer may answer it first. NOT for: storyboards, notes on an existing cut (film-revise), or publishing (film-publish).',
       nodes: [
@@ -92,6 +94,8 @@ export function filmPublishWorkflow(film: string = filmCommand()): RibWorkflowCo
   return {
     definition: {
       name: "film-publish",
+      // film runs a nested bun that drives uv, Chrome and cloud voices, none of which work sandboxed
+      sandbox: { enabled: false },
       description:
         'Use when: a cut has been approved and should go out. Triggers: "publish ep-03", "stage the short for the site". Does: refuses a stale cut or a series with no publish target, asks a person to approve (never the reviewer), then writes the web mp4, poster, thumbnail and captions where the series says. NOT for: pushing; the push stays with you.',
       nodes: [
