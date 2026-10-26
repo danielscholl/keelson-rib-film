@@ -12,6 +12,14 @@ type Node = {
 
 const nodesOf = (w: { definition: unknown }) => (w.definition as { nodes: Node[] }).nodes;
 
+test("both workflows opt out of the sandbox", () => {
+  for (const w of [filmCutWorkflow("FILM"), filmPublishWorkflow("FILM")]) {
+    expect((w.definition as { sandbox?: { enabled?: boolean } }).sandbox).toEqual({
+      enabled: false,
+    });
+  }
+});
+
 describe("film-cut", () => {
   const nodes = nodesOf(filmCutWorkflow("FILM"));
   const ids = new Set(nodes.map((n) => n.id));

@@ -16,6 +16,7 @@ Most strong pieces mix all three. The subject, length and look change every time
 - `film_status` lists the library's series and pieces with each piece's stage (scripted, voiced, cut, checked, published) and what needs attention.
 - `film_doctor` reports the toolchain, which media services are configured, and the exact `film` command for this machine. `film <tool> <short-dir>` below means that command.
 - `film_init` writes a starter library with one working piece.
+- In a sandboxed chat, `film` can't run from your shell: it needs the network, its own Python environment and a browser. Ask the user to turn the sandbox off (`/sandbox off`) before running it, or use the workflows, which run unsandboxed.
 - The `film-cut` workflow voices changed lines, renders the plate, composes, writes the review page, and stops at the cut gate. `film-publish` copies a checked cut to the series' publish target after a person approves.
 
 A library is a folder with `assets/` (or a git repo). Each piece is a folder with a `short.yaml` manifest; a series is the nearest `series.yaml` above its pieces, holding the voice, theme, gates and publish target.
